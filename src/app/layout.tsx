@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "react-hot-toast";
 
 const fraunces = Fraunces({
   variable: "--font-serif",
@@ -28,8 +29,33 @@ export default function RootLayout({
   return (
     <html lang='en' className='scroll-smooth'>
       <body
-        className={`${plusJakartaSans.variable} ${fraunces.variable} font-sans antialiased bg-[#fdfcf8] text-[#0a0a0a]`}>
+        className={`${plusJakartaSans.variable} ${fraunces.variable} font-sans antialiased bg-cream text-charcoal`}>
         {children}
+        <Toaster
+          position='top-center'
+          reverseOrder={false}
+          toastOptions={{
+            duration: 4000,
+            style: {
+              border: "3px solid #0a0a0a",
+              borderRadius: "0px",
+              padding: "16px 24px",
+              color: "#0a0a0a",
+              background: "#fdfcf8",
+              fontSize: "12px",
+              fontWeight: "900",
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              boxShadow: "8px 8px 0px 0px rgba(10, 10, 10, 1)",
+            },
+            success: {
+              iconTheme: {
+                primary: "#ff5722",
+                secondary: "#fdfcf8",
+              },
+            },
+          }}
+        />
       </body>
     </html>
   );
