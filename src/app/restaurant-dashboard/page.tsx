@@ -35,7 +35,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
