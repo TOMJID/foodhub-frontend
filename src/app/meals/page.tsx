@@ -3,11 +3,49 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2, Search, ChevronRight, Filter, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MealCard } from "@/components/meal-card";
 import { CartSheet } from "@/components/cart-sheet";
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 300,
+      damping: 24,
+    },
+  },
+};
+
+const filterPanelVariants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 200,
+      damping: 20,
+    },
+  },
+};
 
 interface Meal {
   id: string;
@@ -162,7 +200,11 @@ export default function MealsPage() {
           </div>
 
           {/* Category & Price Filters */}
-          <div className='bg-white border-4 border-charcoal p-6 space-y-6 shadow-[8px_8px_0px_0px_rgba(10,10,10,1)]'>
+          <motion.div
+            variants={filterPanelVariants}
+            initial='hidden'
+            animate='visible'
+            className='bg-white border-4 border-charcoal p-6 space-y-6 shadow-[8px_8px_0px_0px_rgba(10,10,10,1)]'>
             {/* Header */}
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-3'>
@@ -259,41 +301,76 @@ export default function MealsPage() {
             </div>
 
             {/* Active Filters Display */}
-            {hasActiveFilters && (
-              <div className='pt-4 border-t-2 border-charcoal/10'>
-                <p className='text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-3'>
-                  Active Filters
-                </p>
-                <div className='flex flex-wrap gap-2'>
-                  {searchQuery && (
-                    <Badge className='bg-charcoal text-white rounded-none uppercase text-[8px] font-black px-3 py-1.5 border-2 border-charcoal'>
-                      Search: &quot;{searchQuery}&quot;
-                    </Badge>
-                  )}
-                  {selectedCategory && (
-                    <Badge className='bg-charcoal text-white rounded-none uppercase text-[8px] font-black px-3 py-1.5 border-2 border-charcoal'>
-                      {categories.find((c) => c.id === selectedCategory)?.name}
-                    </Badge>
-                  )}
-                  {priceRange && (
-                    <Badge className='bg-charcoal text-white rounded-none uppercase text-[8px] font-black px-3 py-1.5 border-2 border-charcoal'>
-                      {priceRange === "under10" && "Under $10"}
-                      {priceRange === "10to20" && "$10 - $20"}
-                      {priceRange === "over20" && "Over $20"}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+            <AnimatePresence>
+              {hasActiveFilters && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className='pt-4 border-t-2 border-charcoal/10'>
+                  <p className='text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-3'>
+                    Active Filters
+                  </p>
+                  <div className='flex flex-wrap gap-2'>
+                    <AnimatePresence>
+                      {searchQuery && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          transition={{ duration: 0.2 }}>
+                          <Badge className='bg-charcoal text-white rounded-none uppercase text-[8px] font-black px-3 py-1.5 border-2 border-charcoal'>
+                            Search: &quot;{searchQuery}&quot;
+                          </Badge>
+                        </motion.div>
+                      )}
+                      {selectedCategory && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          transition={{ duration: 0.2 }}>
+                          <Badge className='bg-charcoal text-white rounded-none uppercase text-[8px] font-black px-3 py-1.5 border-2 border-charcoal'>
+                            {
+                              categories.find((c) => c.id === selectedCategory)
+                                ?.name
+                            }
+                          </Badge>
+                        </motion.div>
+                      )}
+                      {priceRange && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          transition={{ duration: 0.2 }}>
+                          <Badge className='bg-charcoal text-white rounded-none uppercase text-[8px] font-black px-3 py-1.5 border-2 border-charcoal'>
+                            {priceRange === "under10" && "Under $10"}
+                            {priceRange === "10to20" && "$10 - $20"}
+                            {priceRange === "over20" && "Over $20"}
+                          </Badge>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
           {/* Results Count */}
           <div className='flex items-center justify-between'>
             <p className='text-sm font-bold text-gray-500'>
               Showing{" "}
-              <span className='text-brand font-black'>
+              <motion.span
+                key={filteredMeals.length}
+                initial={{ scale: 1.2, color: "#FF5722" }}
+                animate={{ scale: 1, color: "#FF5722" }}
+                transition={{ duration: 0.3 }}
+                className='text-brand font-black'>
                 {filteredMeals.length}
-              </span>{" "}
+              </motion.span>{" "}
               {filteredMeals.length === 1 ? "meal" : "meals"}
             </p>
           </div>
@@ -308,21 +385,35 @@ export default function MealsPage() {
             </p>
           </div>
         ) : filteredMeals.length > 0 ? (
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'>
-            {filteredMeals.map((meal) => (
-              <MealCard
-                key={meal.id}
-                id={meal.id}
-                name={meal.name}
-                price={Number(meal.price)}
-                imageUrl={meal.imageUrl}
-                description={meal.description}
-                category={meal.category?.name || undefined}
-                providerName={meal.provider?.restaurantName || undefined}
-                providerId={meal.provider?.id || ""}
-              />
-            ))}
-          </div>
+          <motion.div
+            variants={containerVariants}
+            initial='hidden'
+            animate='visible'
+            className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'>
+            <AnimatePresence mode='popLayout'>
+              {filteredMeals.map((meal, index) => (
+                <motion.div
+                  key={meal.id}
+                  variants={itemVariants}
+                  layout
+                  initial='hidden'
+                  animate='visible'
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ delay: index * 0.05 }}>
+                  <MealCard
+                    id={meal.id}
+                    name={meal.name}
+                    price={Number(meal.price)}
+                    imageUrl={meal.imageUrl}
+                    description={meal.description}
+                    category={meal.category?.name || undefined}
+                    providerName={meal.provider?.restaurantName || undefined}
+                    providerId={meal.provider?.id || ""}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
         ) : (
           <div className='py-40 text-center space-y-8 bg-white border-8 border-charcoal border-dashed'>
             <div className='size-32 bg-cream border-4 border-charcoal border-dashed mx-auto flex items-center justify-center rotate-3'>

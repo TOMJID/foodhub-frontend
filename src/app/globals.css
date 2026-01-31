@@ -130,3 +130,55 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Smooth Scroll Behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom Brutalist Scrollbar */
+::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border: 2px solid #0a0a0a; /* charcoal */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ff5722; /* brand */
+  border: 2px solid #0a0a0a; /* charcoal */
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #e64a19; /* brand-dark */
+  cursor: pointer;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #0a0a0a; /* charcoal */
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+  border: 2px solid #0a0a0a; /* charcoal */
+}
+
+/* Firefox Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #ff5722 transparent;
+}
+
+/* Smooth Scrolling for All Elements */
+* {
+  scroll-behavior: smooth;
+}
+
+/* Add scroll margin for better anchor positioning */
+:target {
+  scroll-margin-top: 100px;
+}

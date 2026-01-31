@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
+import { SmoothScroll } from "@/components/smooth-scroll";
 
 const fraunces = Fraunces({
   variable: "--font-serif",
@@ -30,6 +31,7 @@ export default function RootLayout({
     <html lang='en' className='scroll-smooth'>
       <body
         className={`${plusJakartaSans.variable} ${fraunces.variable} font-sans antialiased bg-cream text-charcoal`}>
+        <SmoothScroll />
         {children}
         <Toaster
           position='top-center'
