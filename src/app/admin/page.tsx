@@ -125,22 +125,6 @@ export default function AdminDashboard() {
               </span>
             </div>
           </div>
-          <div className='hidden md:block border-l-4 border-white/10 pl-12 space-y-6'>
-            <div className='space-y-2'>
-              <p className='text-[10px] font-black uppercase tracking-widest text-white/40'>
-                Growth Strategy
-              </p>
-              <p className='text-sm font-bold leading-relaxed text-white/70'>
-                Revenue is calculated based on completed orders. Platform fee of
-                5% is currently applied to all provider payouts.
-              </p>
-            </div>
-            <Button
-              variant='outline'
-              className='rounded-none border-2 border-white text-white bg-transparent hover:bg-white hover:text-charcoal font-black uppercase text-[10px] tracking-widest px-8 py-6'>
-              View Reports <ArrowUpRight className='size-4 ml-2' />
-            </Button>
-          </div>
         </div>
       </div>
 
