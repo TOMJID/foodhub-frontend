@@ -156,10 +156,11 @@ export default function Home() {
                   Order Now
                 </Button>
                 <Button
+                  asChild
                   variant='outline'
                   size='lg'
                   className='border-[3px] border-charcoal text-charcoal hover:bg-charcoal hover:text-white text-lg font-black h-16 px-10 rounded-none transition-all'>
-                  Join as Restaurant
+                  <Link href='/become-provider'>Join as Restaurant</Link>
                 </Button>
               </div>
             </div>
@@ -388,7 +389,7 @@ export default function Home() {
                     </li>
                     <li>
                       <Link
-                        href='/register'
+                        href='/become-provider'
                         className='hover:text-brand transition-colors'>
                         Start Selling
                       </Link>
