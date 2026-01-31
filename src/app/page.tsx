@@ -52,7 +52,7 @@ export default function Home() {
                 <NavigationMenuLink
                   asChild
                   className={navigationMenuTriggerStyle()}>
-                  <Link href='/providers'>Restaurants</Link>
+                  <Link href='/restaurants'>Restaurants</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
             </NavigationMenuList>
@@ -100,7 +100,7 @@ export default function Home() {
                     Browse Meals
                   </Link>
                   <Link
-                    href='/providers'
+                    href='/restaurants'
                     className='text-2xl font-black uppercase hover:text-brand transition-colors'>
                     Restaurants
                   </Link>
@@ -381,7 +381,7 @@ export default function Home() {
                     </li>
                     <li>
                       <Link
-                        href='/providers'
+                        href='/restaurants'
                         className='hover:text-brand transition-colors'>
                         Restaurants
                       </Link>
