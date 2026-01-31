@@ -15,6 +15,7 @@ import Image from "next/image";
 import { toast } from "react-hot-toast";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export function CartSheet() {
   const {
@@ -27,6 +28,12 @@ export function CartSheet() {
   } = useCart();
   const { data: session } = authClient.useSession();
   const router = useRouter();
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const frameId = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frameId);
+  }, []);
 
   const handleCheckout = () => {
     if (!session) {
@@ -57,7 +64,7 @@ export function CartSheet() {
           size='icon'
           className='relative border-2 border-charcoal rounded-none hover:bg-brand hover:text-white transition-all shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] active:translate-x-1 active:translate-y-1 active:shadow-none'>
           <ShoppingCart className='size-5' />
-          {totalItems() > 0 && (
+          {mounted && totalItems() > 0 && (
             <span className='absolute -top-2 -right-2 bg-brand text-white text-[10px] font-black size-5 flex items-center justify-center border-2 border-charcoal'>
               {totalItems()}
             </span>
