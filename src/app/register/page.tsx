@@ -8,6 +8,7 @@ import * as z from "zod";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -196,7 +197,16 @@ export default function RegisterPage() {
                 type='submit'
                 disabled={isLoading}
                 className='w-full h-16 bg-charcoal text-white text-lg font-black rounded-none border-[3px] border-charcoal shadow-[8px_8px_0px_0px_rgba(255,87,34,1)] hover:bg-brand transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[10px_10px_0px_0px_rgba(255,87,34,1)] active:translate-x-0 active:translate-y-0 active:shadow-none disabled:opacity-70 disabled:cursor-not-allowed'>
-                {isLoading ? "Creating Account..." : "Join FoodHub"}
+                {isLoading ? (
+                  <LoadingSpinner
+                    size='sm'
+                    text=''
+                    brutalist={false}
+                    className='p-0'
+                  />
+                ) : (
+                  "Join FoodHub"
+                )}
               </Button>
             </form>
           </Form>

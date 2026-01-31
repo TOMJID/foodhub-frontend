@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { authClient } from "@/lib/auth-client";
-import { User, Loader2, Clock, Star, MapPin, ArrowRight } from "lucide-react";
+import { User, Clock, Star, MapPin, ArrowRight } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { motion } from "framer-motion";
 import {
   NavigationMenu,
@@ -74,9 +75,13 @@ export default function Home() {
 
           <div className='flex items-center gap-4'>
             {isPending ? (
-              <div className='hidden md:flex items-center gap-2 bg-charcoal/5 px-4 py-2 text-xs font-black uppercase tracking-widest border-[3px] border-charcoal/10 text-charcoal/40 scale-95'>
-                <Loader2 className='size-4 animate-spin' />
-                Checking...
+              <div className='hidden md:flex items-center gap-2 bg-charcoal/5 px-2 py-1 border-[3px] border-charcoal/10 scale-90 translate-y-[-2px]'>
+                <LoadingSpinner
+                  size='sm'
+                  text=''
+                  brutalist={false}
+                  className='p-0'
+                />
               </div>
             ) : session ? (
               <Link
@@ -131,7 +136,12 @@ export default function Home() {
                   <Separator className='bg-charcoal/10' />
                   {isPending ? (
                     <div className='flex items-center gap-2 text-xl font-black uppercase text-charcoal/20'>
-                      <Loader2 className='size-5 animate-spin' />
+                      <LoadingSpinner
+                        size='sm'
+                        text=''
+                        brutalist={false}
+                        className='p-0'
+                      />
                       Loading...
                     </div>
                   ) : session ? (

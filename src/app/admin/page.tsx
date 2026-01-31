@@ -7,10 +7,10 @@ import {
   Pizza,
   ShoppingBag,
   ArrowUpRight,
-  Loader2,
   TrendingUp,
   Activity,
 } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -46,11 +46,8 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className='flex flex-col items-center justify-center py-40 gap-6'>
-        <Loader2 className='size-12 text-brand animate-spin' />
-        <p className='text-[10px] font-black uppercase tracking-[0.4em] text-charcoal/20'>
-          Compiling Platform Data...
-        </p>
+      <div className='py-40'>
+        <LoadingSpinner text='Compiling Platform Data...' size='lg' />
       </div>
     );
   }

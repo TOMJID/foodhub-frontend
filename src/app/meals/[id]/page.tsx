@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Loader2,
   ChevronLeft,
   Star,
   Clock,
@@ -31,6 +30,7 @@ import {
   Utensils as UtensilsIcon,
   MessageSquare,
 } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -184,11 +184,12 @@ export default function MealDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className='min-h-screen bg-cream flex flex-col items-center justify-center gap-6'>
-        <Loader2 className='size-20 text-brand animate-spin' />
-        <p className='text-xl font-black uppercase tracking-widest text-charcoal/30 italic'>
-          Preparing the details...
-        </p>
+      <div className='min-h-screen bg-cream'>
+        <LoadingSpinner
+          text='Preparing the details...'
+          size='xl'
+          className='h-screen'
+        />
       </div>
     );
   }

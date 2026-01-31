@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Loader2,
   ChevronLeft,
   MapPin,
   Store,
@@ -14,6 +13,7 @@ import {
   ChevronRight,
   Info,
 } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MealCard } from "@/components/meal-card";
@@ -87,11 +87,12 @@ export default function ProviderDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className='min-h-screen bg-cream flex flex-col items-center justify-center gap-6'>
-        <Loader2 className='size-20 text-brand animate-spin' />
-        <p className='text-xl font-black uppercase tracking-widest text-charcoal/30 italic'>
-          Locating the kitchen...
-        </p>
+      <div className='min-h-screen bg-cream'>
+        <LoadingSpinner
+          text='Locating the kitchen...'
+          size='xl'
+          className='h-screen'
+        />
       </div>
     );
   }

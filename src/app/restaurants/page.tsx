@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, Search, ChevronRight, Store } from "lucide-react";
+import { Search, ChevronRight, Store } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -119,11 +120,8 @@ export default function RestaurantsPage() {
 
         {/* --- Content --- */}
         {isLoading ? (
-          <div className='py-40 flex flex-col items-center gap-6'>
-            <Loader2 className='size-20 text-brand animate-spin' />
-            <p className='text-xl font-black uppercase tracking-widest text-charcoal/30'>
-              Scouting the city...
-            </p>
+          <div className='py-40'>
+            <LoadingSpinner text='Scouting the city...' size='lg' />
           </div>
         ) : filteredProviders.length > 0 ? (
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8'>

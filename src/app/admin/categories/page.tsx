@@ -1,14 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Trash2,
-  Loader2,
-  Tags,
-  AlertCircle,
-  Pizza,
-  ArrowRight,
-} from "lucide-react";
+import { Trash2, Tags, AlertCircle, Pizza, ArrowRight } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -167,7 +161,12 @@ export default function AdminCategoriesPage() {
                   disabled={isCreating}
                   className='w-full h-16 bg-charcoal text-white rounded-none border-4 border-charcoal font-black uppercase tracking-widest text-xs hover:bg-brand hover:border-black transition-all shadow-[6px_6px_0px_0px_rgba(255,87,34,1)] active:translate-x-1 active:translate-y-1 active:shadow-none'>
                   {isCreating ? (
-                    <Loader2 className='size-6 animate-spin' />
+                    <LoadingSpinner
+                      size='sm'
+                      text=''
+                      brutalist={false}
+                      className='p-0'
+                    />
                   ) : (
                     <>
                       Forge Category <ArrowRight className='size-4 ml-3' />
@@ -206,11 +205,8 @@ export default function AdminCategoriesPage() {
             </div>
             <div className='p-0 divide-y-4 divide-charcoal/5 max-h-[700px] overflow-y-auto px-1'>
               {isLoading ? (
-                <div className='py-20 flex flex-col items-center gap-4 text-charcoal/30'>
-                  <Loader2 className='size-8 animate-spin' />
-                  <p className='text-[10px] font-black uppercase tracking-widest'>
-                    Scanning Catalog...
-                  </p>
+                <div className='py-20'>
+                  <LoadingSpinner text='Scanning Catalog...' size='md' />
                 </div>
               ) : categories.length > 0 ? (
                 categories.map((cat) => (
@@ -252,7 +248,12 @@ export default function AdminCategoriesPage() {
                         variant='ghost'
                         className='size-10 rounded-none border-2 border-charcoal hover:bg-red-500 hover:text-white transition-all opacity-80 hover:opacity-100'>
                         {isDeleting === cat.id ? (
-                          <Loader2 className='size-4 animate-spin' />
+                          <LoadingSpinner
+                            size='sm'
+                            text=''
+                            brutalist={false}
+                            className='p-0'
+                          />
                         ) : (
                           <Trash2 className='size-4' />
                         )}

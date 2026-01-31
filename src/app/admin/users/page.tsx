@@ -5,12 +5,12 @@ import {
   Search,
   ShieldAlert,
   ShieldCheck,
-  Loader2,
   Mail,
   Calendar,
   Store,
   User as UserIcon,
 } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Table,
   TableBody,
@@ -120,11 +120,8 @@ export default function AdminUsersPage() {
       </div>
 
       {isLoading ? (
-        <div className='py-40 flex flex-col items-center gap-6'>
-          <Loader2 className='size-12 text-brand animate-spin' />
-          <p className='text-[10px] font-black uppercase tracking-widest text-charcoal/30 italic'>
-            Consulting the archives...
-          </p>
+        <div className='py-40'>
+          <LoadingSpinner text='Consulting the archives...' size='lg' />
         </div>
       ) : (
         <div className='bg-white border-4 border-charcoal shadow-[12px_12px_0px_0px_rgba(10,10,10,1)]'>
@@ -219,7 +216,12 @@ export default function AdminUsersPage() {
                             : "bg-green-500 text-white hover:bg-white hover:text-green-500"
                         }`}>
                         {isActionLoading === user.id ? (
-                          <Loader2 className='size-3 animate-spin' />
+                          <LoadingSpinner
+                            size='sm'
+                            text=''
+                            brutalist={false}
+                            className='p-0'
+                          />
                         ) : user.isActive ? (
                           <>
                             <ShieldAlert className='size-3 mr-2' /> Suspend

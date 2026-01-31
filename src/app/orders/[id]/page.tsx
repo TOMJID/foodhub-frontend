@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import {
-  Loader2,
   ChevronLeft,
   Package,
   MapPin,
@@ -16,6 +15,7 @@ import {
   AlertCircle,
   XCircle,
 } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -177,8 +177,12 @@ export default function OrderDetailsPage() {
 
   if (isAuthLoading || isLoading) {
     return (
-      <div className='min-h-screen bg-cream flex items-center justify-center'>
-        <Loader2 className='size-12 text-brand animate-spin' />
+      <div className='min-h-screen bg-cream'>
+        <LoadingSpinner
+          text='Consulting the radar...'
+          size='xl'
+          className='h-screen'
+        />
       </div>
     );
   }
@@ -471,8 +475,13 @@ export default function OrderDetailsPage() {
                 className='flex-1 h-12 bg-red-500 text-white rounded-none border-2 border-red-500 font-black uppercase tracking-widest text-xs hover:bg-red-600 transition-all'>
                 {isCancelling ? (
                   <>
-                    <Loader2 className='size-4 mr-2 animate-spin' />
-                    Cancelling...
+                    <LoadingSpinner
+                      size='sm'
+                      text=''
+                      brutalist={false}
+                      className='p-0 mr-2'
+                    />
+                    Voiding...
                   </>
                 ) : (
                   "Yes, Cancel"

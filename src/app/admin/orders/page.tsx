@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  ShoppingBag,
   Search,
-  Loader2,
   Clock,
   CheckCircle2,
   AlertCircle,
@@ -13,7 +11,9 @@ import {
   ExternalLink,
   ChefHat,
   Receipt,
+  ShoppingBag,
 } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Table,
   TableBody,
@@ -120,11 +120,8 @@ export default function AdminOrdersPage() {
       </div>
 
       {isLoading ? (
-        <div className='py-40 flex flex-col items-center gap-6'>
-          <Loader2 className='size-12 text-brand animate-spin' />
-          <p className='text-[10px] font-black uppercase tracking-widest text-charcoal/30 italic'>
-            Syncing with the kitchen...
-          </p>
+        <div className='py-40'>
+          <LoadingSpinner text='Syncing with the kitchen...' size='lg' />
         </div>
       ) : (
         <div className='bg-white border-4 border-charcoal shadow-[12px_12px_0px_0px_rgba(10,10,10,1)]'>

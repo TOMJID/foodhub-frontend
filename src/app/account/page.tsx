@@ -19,7 +19,6 @@ import {
   LogOut,
   Mail,
   Calendar,
-  Loader2,
   Store,
   ChefHat,
   Utensils,
@@ -29,6 +28,7 @@ import {
   XCircle,
   AlertCircle,
 } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -168,13 +168,12 @@ function AccountPageContent() {
 
   if (isPending) {
     return (
-      <div className='min-h-screen bg-cream flex items-center justify-center'>
-        <div className='flex flex-col items-center gap-4'>
-          <Loader2 className='size-16 text-brand animate-spin' />
-          <p className='font-black uppercase tracking-widest text-charcoal/40'>
-            Loading Account...
-          </p>
-        </div>
+      <div className='min-h-screen bg-cream'>
+        <LoadingSpinner
+          text='Loading Account...'
+          size='xl'
+          className='h-screen'
+        />
       </div>
     );
   }
@@ -428,11 +427,11 @@ function AccountPageContent() {
                     </CardHeader>
                     <CardContent>
                       {isOrdersLoading ? (
-                        <div className='py-20 flex flex-col items-center gap-4'>
-                          <Loader2 className='size-12 text-brand animate-spin' />
-                          <p className='font-black uppercase tracking-widest text-charcoal/20'>
-                            Fetching your meals...
-                          </p>
+                        <div className='py-20'>
+                          <LoadingSpinner
+                            text='Fetching your meals...'
+                            size='lg'
+                          />
                         </div>
                       ) : orders.length > 0 ? (
                         <div className='space-y-6'>
@@ -632,7 +631,12 @@ function AccountPageContent() {
               onClick={submitReview}
               className='w-full h-14 bg-charcoal text-white font-black uppercase tracking-widest rounded-none border-4 border-charcoal shadow-[6px_6px_0px_0px_rgba(255,87,34,1)] hover:shadow-none hover:bg-brand transition-all active:translate-x-1 active:translate-y-1'>
               {isSubmittingReview ? (
-                <Loader2 className='animate-spin' />
+                <LoadingSpinner
+                  size='sm'
+                  text=''
+                  brutalist={false}
+                  className='p-0'
+                />
               ) : (
                 "Dispatch Review"
               )}
@@ -680,8 +684,13 @@ function AccountPageContent() {
                 className='flex-1 h-12 bg-red-500 text-white rounded-none border-2 border-red-500 font-black uppercase tracking-widest text-xs hover:bg-red-600 transition-all'>
                 {cancellingOrderId ? (
                   <>
-                    <Loader2 className='size-4 mr-2 animate-spin' />
-                    Cancelling...
+                    <LoadingSpinner
+                      size='sm'
+                      text=''
+                      brutalist={false}
+                      className='p-0 mr-2'
+                    />
+                    Voiding...
                   </>
                 ) : (
                   "Yes, Cancel"
@@ -699,8 +708,8 @@ export default function AccountPage() {
   return (
     <Suspense
       fallback={
-        <div className='min-h-screen bg-cream flex items-center justify-center'>
-          <Loader2 className='size-16 text-brand animate-spin' />
+        <div className='min-h-screen bg-cream'>
+          <LoadingSpinner size='xl' className='h-screen' />
         </div>
       }>
       <AccountPageContent />
