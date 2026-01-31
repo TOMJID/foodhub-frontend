@@ -2,7 +2,8 @@
 
 import { authClient } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -22,11 +23,22 @@ import {
   Store,
   ChefHat,
   Utensils,
+  Star,
+  MessageSquare,
+  ChevronRight,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "react-hot-toast";
 
 interface UserWithExtras {
   id: string;
@@ -39,14 +51,25 @@ interface UserWithExtras {
   updatedAt: Date;
 }
 
+interface OrderItem {
+  id: string;
+  mealId: string;
+  quantity: number;
+  priceAtTime: number;
+  meal: {
+    id: string;
+    name: string;
+    imageUrl?: string | null;
+  };
+}
+
 interface Order {
   id: string;
   status: string;
   totalAmount: number;
   createdAt: string;
+  items: OrderItem[];
 }
-
-import { Suspense } from "react";
 
 function AccountPageContent() {
   const router = useRouter();
@@ -57,6 +80,16 @@ function AccountPageContent() {
 
   const initialTab = searchParams.get("tab") || "profile";
   const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Review states
+  const [reviewingOrder, setReviewingOrder] = useState<Order | null>(null);
+  const [reviewingMeal, setReviewingMeal] = useState<{
+    mealId: string;
+    mealName: string;
+  } | null>(null);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
     const tabFromUrl = searchParams.get("tab");
@@ -113,9 +146,40 @@ function AccountPageContent() {
     router.push("/");
   };
 
+  const submitReview = async () => {
+    if (!reviewingMeal) return;
+
+    setIsSubmittingReview(true);
+    try {
+      const response = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mealId: reviewingMeal.mealId,
+          rating,
+          comment,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Review submitted! Thank you 🔥");
+        setReviewingMeal(null);
+        setRating(5);
+        setComment("");
+      } else {
+        toast.error(data.error || "Failed to submit review.");
+      }
+    } catch {
+      toast.error("Connection error. Please try again.");
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
   return (
     <div className='min-h-screen bg-cream selection:bg-brand selection:text-white'>
-      {/* --- Sticky Header --- */}
       <header className='fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b-4 border-charcoal'>
         <div className='max-w-7xl mx-auto px-6 h-20 flex items-center justify-between'>
           <Link href='/' className='group'>
@@ -139,7 +203,6 @@ function AccountPageContent() {
 
       <main className='max-w-7xl mx-auto px-6 pt-32 pb-20'>
         <div className='grid grid-cols-1 lg:grid-cols-4 gap-12'>
-          {/* --- Profile Sidebar --- */}
           <div className='lg:col-span-1 space-y-8'>
             <div className='bg-white border-4 border-charcoal p-6 shadow-[8px_8px_0px_0px_rgba(10,10,10,1)]'>
               <div className='text-center space-y-4'>
@@ -192,7 +255,6 @@ function AccountPageContent() {
             </div>
           </div>
 
-          {/* --- Main Content --- */}
           <div className='lg:col-span-3'>
             <h1 className='text-5xl font-serif font-black text-charcoal tracking-tighter mb-8 italic'>
               Dashboard
@@ -357,12 +419,23 @@ function AccountPageContent() {
                                     ${Number(order.totalAmount).toFixed(2)}
                                   </p>
                                 </div>
-                                <Button
-                                  variant='outline'
-                                  size='sm'
-                                  className='border-2 border-charcoal rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-charcoal hover:text-white transition-all'>
-                                  View Details
-                                </Button>
+                                <div className='flex flex-col items-end gap-2'>
+                                  {order.status === "delivered" && (
+                                    <Button
+                                      onClick={() => setReviewingOrder(order)}
+                                      size='sm'
+                                      className='bg-brand text-white border-2 border-charcoal rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-white hover:text-brand transition-all shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] hover:shadow-none'>
+                                      <Star className='size-3 mr-1.5' />
+                                      Review Items
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant='outline'
+                                    size='sm'
+                                    className='border-2 border-charcoal rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-charcoal hover:text-white transition-all'>
+                                    View Details
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -395,6 +468,122 @@ function AccountPageContent() {
           </div>
         </div>
       </main>
+
+      {/* --- Review Order Dialog (Pick Meal) --- */}
+      <Dialog
+        open={!!reviewingOrder}
+        onOpenChange={(open) => !open && setReviewingOrder(null)}>
+        <DialogContent className='bg-cream border-4 border-charcoal rounded-none p-0 max-w-md overflow-hidden shadow-[16px_16px_0px_0px_rgba(10,10,10,1)]'>
+          <DialogHeader className='bg-charcoal text-white p-8'>
+            <DialogTitle className='font-serif font-black text-3xl uppercase tracking-tighter italic'>
+              Review Your Feast
+            </DialogTitle>
+            <DialogDescription className='text-brand text-[10px] font-black uppercase tracking-[0.3em]'>
+              Select a dish to rate your experience
+            </DialogDescription>
+          </DialogHeader>
+          <div className='p-6 space-y-4 max-h-[60vh] overflow-y-auto'>
+            {reviewingOrder?.items.map((item) => (
+              <div
+                key={item.id}
+                className='flex items-center justify-between bg-white border-2 border-charcoal p-4 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_rgba(255,87,34,1)] transition-all'>
+                <div className='flex items-center gap-4'>
+                  <div className='size-12 bg-cream border-2 border-charcoal relative overflow-hidden'>
+                    {item.meal.imageUrl ? (
+                      <Image
+                        src={item.meal.imageUrl}
+                        alt={item.meal.name}
+                        fill
+                        className='object-cover'
+                      />
+                    ) : (
+                      <div className='size-full flex items-center justify-center opacity-10'>
+                        <Utensils className='size-6 text-charcoal' />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className='font-black text-xs uppercase text-charcoal'>
+                      {item.meal.name}
+                    </h4>
+                    <p className='text-[8px] font-bold text-gray-400 uppercase italic'>
+                      Order ID: #{reviewingOrder.id.slice(-6)}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() =>
+                    setReviewingMeal({
+                      mealId: item.mealId,
+                      mealName: item.meal.name,
+                    })
+                  }
+                  className='bg-charcoal text-white size-10 rounded-none border-2 border-charcoal hover:bg-brand transition-all flex items-center justify-center'>
+                  <ChevronRight className='size-5' />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* --- Submit Review Dialog --- */}
+      <Dialog
+        open={!!reviewingMeal}
+        onOpenChange={(open) => !open && setReviewingMeal(null)}>
+        <DialogContent className='bg-cream border-4 border-charcoal rounded-none p-0 max-w-md overflow-hidden shadow-[16px_16px_0px_0px_rgba(10,10,10,1)]'>
+          <DialogHeader className='bg-brand text-white p-8'>
+            <DialogTitle className='font-serif font-black text-3xl uppercase tracking-tighter italic'>
+              How was the {reviewingMeal?.mealName}?
+            </DialogTitle>
+            <DialogDescription className='text-white/80 text-[10px] font-black uppercase tracking-[0.3em]'>
+              Your feedback fuels the kitchen
+            </DialogDescription>
+          </DialogHeader>
+          <div className='p-8 space-y-8'>
+            <div className='space-y-4'>
+              <p className='text-[10px] font-black uppercase tracking-widest text-charcoal/50 text-center'>
+                Select Your Rating
+              </p>
+              <div className='flex justify-center gap-2'>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setRating(star)}
+                    className={`size-12 border-4 border-charcoal flex items-center justify-center transition-all ${rating >= star ? "bg-brand text-white" : "bg-white text-gray-200"}`}>
+                    <Star
+                      className={`size-6 ${rating >= star ? "fill-white" : "fill-transparent"}`}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className='space-y-4'>
+              <p className='text-[10px] font-black uppercase tracking-widest text-charcoal/50 flex items-center gap-2'>
+                <MessageSquare className='size-3' /> Leave a comment (Optional)
+              </p>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder='TELL US WHAT YOU THOUGHT...'
+                className='w-full min-h-[120px] bg-white border-4 border-charcoal p-4 font-black uppercase text-xs placeholder:text-gray-200 focus:outline-none focus:ring-4 focus:ring-brand/20 resize-none'
+              />
+            </div>
+
+            <Button
+              disabled={isSubmittingReview}
+              onClick={submitReview}
+              className='w-full h-14 bg-charcoal text-white font-black uppercase tracking-widest rounded-none border-4 border-charcoal shadow-[6px_6px_0px_0px_rgba(255,87,34,1)] hover:shadow-none hover:bg-brand transition-all active:translate-x-1 active:translate-y-1'>
+              {isSubmittingReview ? (
+                <Loader2 className='animate-spin' />
+              ) : (
+                "Dispatch Review"
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

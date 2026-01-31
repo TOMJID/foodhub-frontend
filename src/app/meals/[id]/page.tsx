@@ -29,6 +29,7 @@ import {
   Plus,
   Minus,
   Utensils as UtensilsIcon,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +38,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useCart } from "@/store/useCart";
 import { toast } from "react-hot-toast";
 import { CartSheet } from "@/components/cart-sheet";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const MealIllustration = ({ id }: { id: string }) => {
   const icons = [
@@ -81,6 +83,17 @@ const MealIllustration = ({ id }: { id: string }) => {
   );
 };
 
+interface Review {
+  id: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+  customer: {
+    name: string;
+    image?: string | null;
+  };
+}
+
 interface Meal {
   id: string;
   name: string;
@@ -101,9 +114,15 @@ export default function MealDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
   const [meal, setMeal] = useState<Meal | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const { addItem } = useCart();
+
+  const averageRating =
+    reviews.length > 0
+      ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
+      : 0;
 
   const handleAddToCart = () => {
     if (!meal) return;
@@ -139,24 +158,27 @@ export default function MealDetailsPage() {
   };
 
   useEffect(() => {
-    const fetchMeal = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`/api/meals/${id}`);
-        const json = await response.json();
-        if (json.success) {
-          setMeal(json.data);
-        } else {
-          console.error("Meal not found");
-        }
+        const [mealRes, reviewsRes] = await Promise.all([
+          fetch(`/api/meals/${id}`),
+          fetch(`/api/reviews/meal/${id}`),
+        ]);
+
+        const mealJson = await mealRes.json();
+        const reviewsJson = await reviewsRes.json();
+
+        if (mealJson.success) setMeal(mealJson.data);
+        if (reviewsJson.success) setReviews(reviewsJson.data);
       } catch (error) {
-        console.error("Failed to fetch meal:", error);
+        console.error("Failed to fetch meal data:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
     if (id) {
-      fetchMeal();
+      fetchData();
     }
   }, [id]);
 
@@ -249,9 +271,13 @@ export default function MealDetailsPage() {
                 </span>
               </div>
               <div className='bg-white border-2 border-charcoal p-4 flex flex-col items-center gap-2'>
-                <Star className='size-5 text-brand fill-brand' />
+                <Star
+                  className={`size-5 ${averageRating > 0 ? "text-brand fill-brand" : "text-gray-200"}`}
+                />
                 <span className='text-[10px] font-black uppercase tracking-widest text-charcoal'>
-                  4.8 (200+)
+                  {averageRating > 0
+                    ? `${averageRating.toFixed(1)} (${reviews.length})`
+                    : "NO REVIEWS"}
                 </span>
               </div>
               <div className='bg-white border-2 border-charcoal p-4 flex flex-col items-center gap-2 col-span-2 md:col-span-1'>
@@ -347,6 +373,97 @@ export default function MealDetailsPage() {
             </div>
           </div>
         </div>
+
+        {/* --- Reviews Section --- */}
+        <section className='mt-24 space-y-12'>
+          <div className='flex items-end justify-between border-b-8 border-charcoal pb-6'>
+            <div className='space-y-2'>
+              <span className='text-brand font-black uppercase tracking-[0.3em] text-[10px]'>
+                Community Voice
+              </span>
+              <h2 className='text-5xl md:text-7xl font-serif font-black text-charcoal tracking-tighter italic leading-none'>
+                Kitchen <span className='text-brand not-italic'>Talk.</span>
+              </h2>
+            </div>
+            <div className='text-right hidden md:block'>
+              <div className='flex items-center gap-1 justify-end mb-1'>
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star
+                    key={s}
+                    className={`size-4 ${Math.round(averageRating) >= s ? "text-brand fill-brand" : "text-gray-200"}`}
+                  />
+                ))}
+              </div>
+              <p className='text-[10px] font-black uppercase tracking-widest text-charcoal/40'>
+                {reviews.length} Reviews logged
+              </p>
+            </div>
+          </div>
+
+          {reviews.length > 0 ? (
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
+              {reviews.map((review) => (
+                <Card
+                  key={review.id}
+                  className='rounded-none border-4 border-charcoal bg-white shadow-[8px_8px_0px_0px_rgba(10,10,10,1)] overflow-hidden flex flex-col'>
+                  <CardContent className='p-8 space-y-6 grow'>
+                    <div className='flex justify-between items-start'>
+                      <div className='flex items-center gap-3'>
+                        <Avatar className='size-10 border-2 border-charcoal rounded-none'>
+                          <AvatarImage
+                            src={review.customer.image || ""}
+                            className='object-cover'
+                          />
+                          <AvatarFallback className='bg-brand text-white font-black text-xs uppercase'>
+                            {review.customer.name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className='font-black text-xs uppercase text-charcoal leading-none mb-1'>
+                            {review.customer.name}
+                          </p>
+                          <p className='text-[8px] font-bold text-gray-400 uppercase tracking-widest'>
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className='bg-charcoal text-white px-2 py-1 flex items-center gap-1'>
+                        <span className='text-[10px] font-black'>
+                          {review.rating}
+                        </span>
+                        <Star className='size-2.5 fill-brand text-brand' />
+                      </div>
+                    </div>
+
+                    <div className='relative'>
+                      <MessageSquare className='absolute -left-2 -top-2 size-8 text-brand/10 -rotate-12' />
+                      <p className='relative z-10 text-sm font-bold text-charcoal leading-relaxed uppercase italic'>
+                        &quot;
+                        {review.comment ||
+                          "AMAZING FLAVOR, HIGHLY RECOMMENDED!"}
+                        &quot;
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className='py-20 border-4 border-charcoal border-dashed bg-white/50 flex flex-col items-center justify-center text-center p-12 space-y-6'>
+              <div className='size-16 bg-white border-2 border-charcoal flex items-center justify-center rotate-6'>
+                <MessageSquare className='size-8 text-charcoal/10' />
+              </div>
+              <div>
+                <h3 className='text-2xl font-serif font-black text-charcoal uppercase'>
+                  The silence is delicious
+                </h3>
+                <p className='text-xs font-bold text-gray-400 uppercase tracking-widest mt-2'>
+                  Be the first to share your experience after ordering!
+                </p>
+              </div>
+            </div>
+          )}
+        </section>
       </main>
 
       {/* --- Simple Footer --- */}
