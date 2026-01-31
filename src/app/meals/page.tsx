@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, Search, ChevronRight } from "lucide-react";
+import { Loader2, Search, ChevronRight, Filter, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { MealCard } from "@/components/meal-card";
 import { CartSheet } from "@/components/cart-sheet";
 
@@ -14,36 +15,80 @@ interface Meal {
   price: number;
   imageUrl: string | null;
   description: string | null;
-  category: { name: string } | null;
+  category: { id: string; name: string } | null;
   provider: { id: string; restaurantName: string } | null;
+}
+
+interface Category {
+  id: string;
+  name: string;
 }
 
 export default function MealsPage() {
   const [meals, setMeals] = useState<Meal[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [priceRange, setPriceRange] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchMeals = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch("/api/meals");
-        const json = await response.json();
-        if (json.success) {
-          setMeals(json.data);
+        const [mealsRes, categoriesRes] = await Promise.all([
+          fetch("/api/meals"),
+          fetch("/api/categories"),
+        ]);
+
+        const mealsJson = await mealsRes.json();
+        const categoriesJson = await categoriesRes.json();
+
+        if (mealsJson.success) {
+          setMeals(mealsJson.data);
+        }
+        if (categoriesJson.success) {
+          setCategories(categoriesJson.data);
         }
       } catch (error) {
-        console.error("Failed to fetch meals:", error);
+        console.error("Failed to fetch data:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchMeals();
+    fetchData();
   }, []);
 
-  const filteredMeals = meals.filter((meal) =>
-    meal.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredMeals = meals.filter((meal) => {
+    // Search filter
+    const matchesSearch = meal.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+    // Category filter
+    const matchesCategory =
+      !selectedCategory || meal.category?.id === selectedCategory;
+
+    // Price range filter
+    let matchesPrice = true;
+    if (priceRange) {
+      const price = Number(meal.price);
+      if (priceRange === "under10") matchesPrice = price < 10;
+      else if (priceRange === "10to20")
+        matchesPrice = price >= 10 && price <= 20;
+      else if (priceRange === "over20") matchesPrice = price > 20;
+    }
+
+    return matchesSearch && matchesCategory && matchesPrice;
+  });
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedCategory(null);
+    setPriceRange(null);
+  };
+
+  const hasActiveFilters = searchQuery || selectedCategory || priceRange;
 
   return (
     <div className='min-h-screen bg-cream'>
@@ -103,8 +148,9 @@ export default function MealsPage() {
         </div>
 
         {/* --- Filter Bar --- */}
-        <div className='flex flex-col md:row items-center gap-6 mb-12'>
-          <div className='relative w-full md:grow'>
+        <div className='space-y-8 mb-12'>
+          {/* Search */}
+          <div className='relative w-full'>
             <Search className='absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400' />
             <Input
               type='text'
@@ -113,6 +159,143 @@ export default function MealsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+          </div>
+
+          {/* Category & Price Filters */}
+          <div className='bg-white border-4 border-charcoal p-6 space-y-6 shadow-[8px_8px_0px_0px_rgba(10,10,10,1)]'>
+            {/* Header */}
+            <div className='flex items-center justify-between'>
+              <div className='flex items-center gap-3'>
+                <Filter className='size-5 text-brand' />
+                <h3 className='text-sm font-black uppercase tracking-widest text-charcoal'>
+                  Filter Results
+                </h3>
+              </div>
+              {hasActiveFilters && (
+                <Button
+                  onClick={clearFilters}
+                  variant='ghost'
+                  size='sm'
+                  className='font-black uppercase text-[10px] tracking-widest text-red-500 hover:text-red-600 hover:bg-red-50'>
+                  <X className='size-3 mr-1' />
+                  Clear All
+                </Button>
+              )}
+            </div>
+
+            {/* Category Filters */}
+            <div className='space-y-3'>
+              <label className='text-[10px] font-black uppercase tracking-[0.2em] text-gray-400'>
+                Cuisine Type
+              </label>
+              <div className='flex flex-wrap gap-2'>
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className={`px-4 py-2 border-2 font-black uppercase text-xs tracking-wider transition-all ${
+                    !selectedCategory
+                      ? "bg-brand text-white border-brand shadow-[4px_4px_0px_0px_rgba(10,10,10,1)]"
+                      : "bg-white text-charcoal border-charcoal hover:border-brand"
+                  }`}>
+                  All
+                </button>
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.id)}
+                    className={`px-4 py-2 border-2 font-black uppercase text-xs tracking-wider transition-all ${
+                      selectedCategory === category.id
+                        ? "bg-brand text-white border-brand shadow-[4px_4px_0px_0px_rgba(10,10,10,1)]"
+                        : "bg-white text-charcoal border-charcoal hover:border-brand"
+                    }`}>
+                    {category.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Price Range Filters */}
+            <div className='space-y-3'>
+              <label className='text-[10px] font-black uppercase tracking-[0.2em] text-gray-400'>
+                Price Range
+              </label>
+              <div className='flex flex-wrap gap-2'>
+                <button
+                  onClick={() => setPriceRange(null)}
+                  className={`px-4 py-2 border-2 font-black uppercase text-xs tracking-wider transition-all ${
+                    !priceRange
+                      ? "bg-brand text-white border-brand shadow-[4px_4px_0px_0px_rgba(10,10,10,1)]"
+                      : "bg-white text-charcoal border-charcoal hover:border-brand"
+                  }`}>
+                  All Prices
+                </button>
+                <button
+                  onClick={() => setPriceRange("under10")}
+                  className={`px-4 py-2 border-2 font-black uppercase text-xs tracking-wider transition-all ${
+                    priceRange === "under10"
+                      ? "bg-brand text-white border-brand shadow-[4px_4px_0px_0px_rgba(10,10,10,1)]"
+                      : "bg-white text-charcoal border-charcoal hover:border-brand"
+                  }`}>
+                  Under $10
+                </button>
+                <button
+                  onClick={() => setPriceRange("10to20")}
+                  className={`px-4 py-2 border-2 font-black uppercase text-xs tracking-wider transition-all ${
+                    priceRange === "10to20"
+                      ? "bg-brand text-white border-brand shadow-[4px_4px_0px_0px_rgba(10,10,10,1)]"
+                      : "bg-white text-charcoal border-charcoal hover:border-brand"
+                  }`}>
+                  $10 - $20
+                </button>
+                <button
+                  onClick={() => setPriceRange("over20")}
+                  className={`px-4 py-2 border-2 font-black uppercase text-xs tracking-wider transition-all ${
+                    priceRange === "over20"
+                      ? "bg-brand text-white border-brand shadow-[4px_4px_0px_0px_rgba(10,10,10,1)]"
+                      : "bg-white text-charcoal border-charcoal hover:border-brand"
+                  }`}>
+                  Over $20
+                </button>
+              </div>
+            </div>
+
+            {/* Active Filters Display */}
+            {hasActiveFilters && (
+              <div className='pt-4 border-t-2 border-charcoal/10'>
+                <p className='text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-3'>
+                  Active Filters
+                </p>
+                <div className='flex flex-wrap gap-2'>
+                  {searchQuery && (
+                    <Badge className='bg-charcoal text-white rounded-none uppercase text-[8px] font-black px-3 py-1.5 border-2 border-charcoal'>
+                      Search: &quot;{searchQuery}&quot;
+                    </Badge>
+                  )}
+                  {selectedCategory && (
+                    <Badge className='bg-charcoal text-white rounded-none uppercase text-[8px] font-black px-3 py-1.5 border-2 border-charcoal'>
+                      {categories.find((c) => c.id === selectedCategory)?.name}
+                    </Badge>
+                  )}
+                  {priceRange && (
+                    <Badge className='bg-charcoal text-white rounded-none uppercase text-[8px] font-black px-3 py-1.5 border-2 border-charcoal'>
+                      {priceRange === "under10" && "Under $10"}
+                      {priceRange === "10to20" && "$10 - $20"}
+                      {priceRange === "over20" && "Over $20"}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Results Count */}
+          <div className='flex items-center justify-between'>
+            <p className='text-sm font-bold text-gray-500'>
+              Showing{" "}
+              <span className='text-brand font-black'>
+                {filteredMeals.length}
+              </span>{" "}
+              {filteredMeals.length === 1 ? "meal" : "meals"}
+            </p>
           </div>
         </div>
 
