@@ -117,7 +117,9 @@ export default function OrderDetailsPage() {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const response = await fetch(`/api/orders/${id}`);
+        const response = await fetch(`/api/orders/${id}`, {
+          credentials: "include",
+        });
         const data = await response.json();
         if (data.success) {
           setOrder(data.data);

@@ -12,8 +12,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/api/:path*",
-        destination: "https://food-hub-backend-inky.vercel.app/api/:path*",
+        source: "/api/auth/:path*",
+        destination: "https://food-hub-backend-inky.vercel.app/api/auth/:path*",
       },
     ];
   },

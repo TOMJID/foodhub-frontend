@@ -62,6 +62,7 @@ export default function CheckoutPage() {
 
       const response = await fetch("/api/orders", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           providerId,

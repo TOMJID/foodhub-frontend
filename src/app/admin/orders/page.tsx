@@ -65,7 +65,9 @@ export default function AdminOrdersPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch("/api/orders/my");
+      const response = await fetch("/api/orders/my", {
+        credentials: "include",
+      });
       const json = await response.json();
       if (json.success) {
         setOrders(json.data);

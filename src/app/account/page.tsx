@@ -101,7 +101,9 @@ function AccountPageContent() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch("/api/orders/my");
+        const response = await fetch("/api/orders/my", {
+          credentials: "include",
+        });
         const json = await response.json();
         if (json.success) {
           setOrders(json.data);
@@ -153,6 +155,7 @@ function AccountPageContent() {
     try {
       const response = await fetch("/api/reviews", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mealId: reviewingMeal.mealId,

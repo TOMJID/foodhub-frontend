@@ -30,12 +30,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -146,8 +141,8 @@ export default function ProviderDashboardPage() {
     const fetchData = async () => {
       try {
         const [categoriesRes, profileRes] = await Promise.all([
-          fetch("/api/categories"),
-          fetch("/api/providers/me"),
+          fetch("/api/categories", { credentials: "include" }),
+          fetch("/api/providers/me", { credentials: "include" }),
         ]);
 
         const categoriesJson = await categoriesRes.json();
@@ -157,8 +152,10 @@ export default function ProviderDashboardPage() {
 
         if (profileJson.success && profileJson.data.id) {
           const [mealsRes, ordersRes] = await Promise.all([
-            fetch(`/api/meals/provider/${profileJson.data.id}`),
-            fetch(`/api/orders/my`),
+            fetch(`/api/meals/provider/${profileJson.data.id}`, {
+              credentials: "include",
+            }),
+            fetch(`/api/orders/my`, { credentials: "include" }),
           ]);
 
           const mealsJson = await mealsRes.json();
@@ -186,6 +183,7 @@ export default function ProviderDashboardPage() {
     try {
       const response = await fetch("/api/meals", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
@@ -211,6 +209,7 @@ export default function ProviderDashboardPage() {
     try {
       const response = await fetch(`/api/orders/status/${orderId}`, {
         method: "PATCH",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
@@ -238,6 +237,7 @@ export default function ProviderDashboardPage() {
     try {
       const response = await fetch(`/api/meals/${mealToDelete}`, {
         method: "DELETE",
+        credentials: "include",
       });
       const data = await response.json();
 
