@@ -17,7 +17,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -81,6 +80,8 @@ export default function LoginPage() {
             priority
           />
         </div>
+        {/* Dark Overlay */}
+        <div className='absolute inset-0 bg-black/70'></div>
         <div className='relative z-10 max-w-lg text-center'>
           <Link href='/' className='inline-block mb-12'>
             <span className='text-4xl font-serif font-black tracking-tighter text-white'>
