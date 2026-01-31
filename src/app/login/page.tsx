@@ -17,8 +17,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -31,6 +33,8 @@ const formSchema = z.object({
 });
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -40,11 +44,29 @@ export default function LoginPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast.success("Welcome back! You have successfully signed in.");
-    // Handle login logic here
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
+    const { error } = await authClient.signIn.email({
+      email: values.email,
+      password: values.password,
+      callbackURL: "/",
+    });
+
+    if (error) {
+      toast.error(error.message || "Failed to sign in. Please try again.");
+    } else {
+      toast.success("Welcome back! You have successfully signed in.");
+      router.push("/");
+    }
+    setIsLoading(false);
   }
+
+  const handleGoogleSignIn = async () => {
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/",
+    });
+  };
 
   return (
     <div className='flex flex-col lg:flex-row min-h-screen bg-cream'>
@@ -149,29 +171,11 @@ export default function LoginPage() {
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name='remember'
-                render={({ field }) => (
-                  <FormItem className='flex flex-row items-center space-x-2 space-y-0'>
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        className='border-2 border-charcoal rounded-none data-[state=checked]:bg-brand data-[state=checked]:border-brand'
-                      />
-                    </FormControl>
-                    <FormLabel className='text-xs font-bold text-charcoal leading-none cursor-pointer'>
-                      Remember my session for 30 days
-                    </FormLabel>
-                  </FormItem>
-                )}
-              />
-
               <Button
                 type='submit'
-                className='w-full h-16 bg-charcoal text-white text-lg font-black rounded-none border-[3px] border-charcoal shadow-[8px_8px_0px_0px_rgba(255,87,34,1)] hover:bg-brand transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[10px_10px_0px_0px_rgba(255,87,34,1)] active:translate-x-0 active:translate-y-0 active:shadow-none'>
-                Sign In to Your Account
+                disabled={isLoading}
+                className='w-full h-16 bg-charcoal text-white text-lg font-black rounded-none border-[3px] border-charcoal shadow-[8px_8px_0px_0px_rgba(255,87,34,1)] hover:bg-brand transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[10px_10px_0px_0px_rgba(255,87,34,1)] active:translate-x-0 active:translate-y-0 active:shadow-none disabled:opacity-70 disabled:cursor-not-allowed'>
+                {isLoading ? "Signing In..." : "Sign In to Your Account"}
               </Button>
             </form>
           </Form>
@@ -191,6 +195,7 @@ export default function LoginPage() {
             <div className='flex justify-center'>
               <Button
                 variant='outline'
+                onClick={handleGoogleSignIn}
                 className='h-14 border-[3px] border-charcoal rounded-none text-xs font-black uppercase hover:bg-charcoal hover:text-white transition-all'>
                 <svg
                   className='mr-2 h-4 w-4'
