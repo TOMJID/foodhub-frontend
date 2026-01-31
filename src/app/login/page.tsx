@@ -181,7 +181,7 @@ export default function LoginPage() {
           </Form>
 
           <div className='mt-12 space-y-8'>
-            <div className='relative'>
+            {/* <div className='relative'>
               <div className='absolute inset-0 flex items-center'>
                 <Separator className='bg-charcoal/10 h-[2px]' />
               </div>
@@ -212,7 +212,7 @@ export default function LoginPage() {
                 </svg>
                 Google
               </Button>
-            </div>
+            </div> */}
           </div>
 
           <p className='mt-16 text-center text-xs font-bold text-gray-400 uppercase tracking-widest'>

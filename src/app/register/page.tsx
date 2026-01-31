@@ -180,7 +180,7 @@ export default function RegisterPage() {
                       <FormControl>
                         <Input
                           type='password'
-                          placeholder='••••••••'
+                          placeholder='*******'
                           className='h-14 border-[3px] border-charcoal rounded-none text-xl tracking-widest focus-visible:ring-brand focus-visible:ring-3 focus-visible:ring-offset-0'
                           {...field}
                         />
@@ -200,8 +200,9 @@ export default function RegisterPage() {
             </form>
           </Form>
 
+          {/* TODO: Add Google Sign In */}
           <div className='mt-12 space-y-8'>
-            <div className='relative'>
+            {/* <div className='relative'>
               <div className='absolute inset-0 flex items-center'>
                 <Separator className='bg-charcoal/10 h-[2px]' />
               </div>
@@ -232,7 +233,7 @@ export default function RegisterPage() {
                 </svg>
                 Google
               </Button>
-            </div>
+            </div> */}
           </div>
 
           <p className='mt-16 text-center text-xs font-bold text-gray-400 uppercase tracking-widest'>
