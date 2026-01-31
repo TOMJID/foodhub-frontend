@@ -142,7 +142,7 @@ export default function LoginPage() {
                   name='password'
                   render={({ field }) => (
                     <FormItem className='space-y-2'>
-                      <div className='flex justify-between items-center'>
+                      {/* <div className='flex justify-between items-center'>
                         <FormLabel className='text-xs font-black uppercase tracking-widest text-charcoal'>
                           Password
                         </FormLabel>
@@ -151,11 +151,11 @@ export default function LoginPage() {
                           className='text-[10px] font-black uppercase text-brand hover:underline'>
                           Forgot Password?
                         </Link>
-                      </div>
+                      </div> */}
                       <FormControl>
                         <Input
                           type='password'
-                          placeholder='••••••••'
+                          placeholder='********'
                           className='h-14 border-[3px] border-charcoal rounded-none text-xl tracking-widest focus-visible:ring-brand focus-visible:ring-3 focus-visible:ring-offset-0'
                           {...field}
                         />
@@ -184,6 +184,7 @@ export default function LoginPage() {
             </form>
           </Form>
 
+          {/* google login */}
           <div className='mt-12 space-y-8'>
             {/* <div className='relative'>
               <div className='absolute inset-0 flex items-center'>
