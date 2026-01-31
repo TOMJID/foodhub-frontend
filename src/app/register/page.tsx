@@ -103,7 +103,7 @@ export default function RegisterPage() {
           </p>
         </div>
         {/* Abstract Neobrutalist Shape */}
-        <div className='absolute -bottom-24 -right-24 size-96 border-[12px] border-brand rotate-12 opacity-50 pointer-events-none'></div>
+        <div className='absolute -bottom-24 -right-24 size-96 border-12 border-brand rotate-12 opacity-50 pointer-events-none'></div>
       </div>
 
       {/* --- Form Side (Right) --- */}
