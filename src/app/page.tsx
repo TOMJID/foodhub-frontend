@@ -56,6 +56,19 @@ export default function Home() {
                   <Link href='/restaurants'>Restaurants</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
+              {session?.user &&
+                (session.user as unknown as { role: string }).role ===
+                  "admin" && (
+                  <NavigationMenuItem>
+                    <NavigationMenuLink
+                      asChild
+                      className={navigationMenuTriggerStyle()}>
+                      <Link href='/admin' className='text-brand font-black'>
+                        Admin Panel
+                      </Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                )}
             </NavigationMenuList>
           </NavigationMenu>
 
@@ -106,6 +119,15 @@ export default function Home() {
                     className='text-2xl font-black uppercase hover:text-brand transition-colors'>
                     Restaurants
                   </Link>
+                  {session?.user &&
+                    (session.user as unknown as { role: string }).role ===
+                      "admin" && (
+                      <Link
+                        href='/admin'
+                        className='text-2xl font-black uppercase text-brand transition-colors'>
+                        Admin Panel
+                      </Link>
+                    )}
                   <Separator className='bg-charcoal/10' />
                   {isPending ? (
                     <div className='flex items-center gap-2 text-xl font-black uppercase text-charcoal/20'>
