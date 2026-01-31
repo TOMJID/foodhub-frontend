@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
-import { User } from "lucide-react";
+import { User, Loader2 } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -60,7 +60,10 @@ export default function Home() {
 
           <div className='flex items-center gap-4'>
             {isPending ? (
-              <div className='hidden md:block w-24 h-10 bg-charcoal/5 animate-pulse' />
+              <div className='hidden md:flex items-center gap-2 bg-charcoal/5 px-4 py-2 text-xs font-black uppercase tracking-widest border-[3px] border-charcoal/10 text-charcoal/40 scale-95'>
+                <Loader2 className='size-4 animate-spin' />
+                Checking...
+              </div>
             ) : session ? (
               <Link
                 href='/account'
@@ -103,7 +106,10 @@ export default function Home() {
                   </Link>
                   <Separator className='bg-charcoal/10' />
                   {isPending ? (
-                    <div className='w-full h-8 bg-charcoal/5 animate-pulse rounded' />
+                    <div className='flex items-center gap-2 text-xl font-black uppercase text-charcoal/20'>
+                      <Loader2 className='size-5 animate-spin' />
+                      Loading...
+                    </div>
                   ) : session ? (
                     <Link
                       href='/account'
