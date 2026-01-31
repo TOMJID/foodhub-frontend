@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import Link from "next/link";
+import { useCart } from "@/store/useCart";
+import { toast } from "react-hot-toast";
 
 const MealIllustration = ({ id }: { id: string }) => {
   const icons = [
@@ -78,6 +80,7 @@ interface MealCardProps {
   description?: string | null;
   category?: string;
   providerName?: string;
+  providerId: string;
 }
 
 export function MealCard({
@@ -88,7 +91,36 @@ export function MealCard({
   description,
   category,
   providerName,
+  providerId,
 }: MealCardProps) {
+  const { addItem } = useCart();
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem({
+      id,
+      name,
+      price,
+      imageUrl,
+      restaurantId: providerId,
+      restaurantName: providerName,
+    });
+    toast.success(`${name} added to cart!`, {
+      icon: "🍱",
+      style: {
+        border: "3px solid #0a0a0a",
+        padding: "16px",
+        color: "#0a0a0a",
+        fontWeight: "900",
+        textTransform: "uppercase",
+        borderRadius: "0",
+        background: "#fff",
+        boxShadow: "8px 8px 0px 0px rgba(255,87,34,1)",
+      },
+      duration: 2000,
+    });
+  };
   return (
     <Card className='group overflow-hidden rounded-none border-4 border-charcoal bg-white shadow-[8px_8px_0px_0px_rgba(10,10,10,1)] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[10px_10px_0px_0px_rgba(255,87,34,1)]'>
       <div className='relative aspect-square overflow-hidden border-b-4 border-charcoal group'>
@@ -112,8 +144,9 @@ export function MealCard({
         <div className='absolute bottom-3 right-3 opacity-0 translate-y-2 transition-all group-hover:opacity-100 group-hover:translate-y-0'>
           <Button
             size='sm'
-            className='h-8 w-8 rounded-none border-2 border-charcoal bg-brand p-0 hover:bg-black'>
-            <Plus className='size-4 text-white' />
+            onClick={handleAddToCart}
+            className='h-10 w-10 rounded-none border-2 border-charcoal bg-brand p-0 hover:bg-black shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] active:translate-x-1 active:translate-y-1 active:shadow-none'>
+            <Plus className='size-5 text-white' />
           </Button>
         </div>
       </div>

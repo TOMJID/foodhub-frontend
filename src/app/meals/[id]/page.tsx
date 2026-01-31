@@ -34,6 +34,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
+import { useCart } from "@/store/useCart";
+import { toast } from "react-hot-toast";
+import { CartSheet } from "@/components/cart-sheet";
 
 const MealIllustration = ({ id }: { id: string }) => {
   const icons = [
@@ -100,6 +103,40 @@ export default function MealDetailsPage() {
   const [meal, setMeal] = useState<Meal | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const { addItem } = useCart();
+
+  const handleAddToCart = () => {
+    if (!meal) return;
+
+    // Add multiple quantities at once
+    for (let i = 0; i < quantity; i++) {
+      addItem({
+        id: meal.id,
+        name: meal.name,
+        price: Number(meal.price),
+        imageUrl: meal.imageUrl,
+        restaurantId: meal.providerId,
+        restaurantName: meal.provider.restaurantName,
+      });
+    }
+
+    toast.success(
+      `${quantity > 1 ? `${quantity}x ` : ""}${meal.name} added to basket!`,
+      {
+        icon: "🍱",
+        style: {
+          border: "3px solid #0a0a0a",
+          padding: "16px",
+          color: "#0a0a0a",
+          fontWeight: "900",
+          textTransform: "uppercase",
+          borderRadius: "0",
+          background: "#fff",
+          boxShadow: "8px 8px 0px 0px rgba(255,87,34,1)",
+        },
+      },
+    );
+  };
 
   useEffect(() => {
     const fetchMeal = async () => {
@@ -176,6 +213,7 @@ export default function MealDetailsPage() {
             <Badge className='bg-charcoal text-white rounded-none font-black text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 hidden md:block'>
               AUTHENTIC {meal.category.name}
             </Badge>
+            <CartSheet />
           </div>
         </div>
       </header>
@@ -300,7 +338,9 @@ export default function MealDetailsPage() {
                 </div>
               </div>
 
-              <Button className='w-full h-20 bg-charcoal text-white rounded-none border-4 border-charcoal font-black uppercase tracking-[0.15em] text-lg hover:bg-brand hover:border-black transition-all shadow-[10px_10px_0px_0px_rgba(255,87,34,1)] active:translate-x-1 active:translate-y-1 active:shadow-none group'>
+              <Button
+                onClick={handleAddToCart}
+                className='w-full h-20 bg-charcoal text-white rounded-none border-4 border-charcoal font-black uppercase tracking-[0.15em] text-lg hover:bg-brand hover:border-black transition-all shadow-[10px_10px_0px_0px_rgba(255,87,34,1)] active:translate-x-1 active:translate-y-1 active:shadow-none group'>
                 <ShoppingCart className='size-6 mr-3 group-hover:scale-110 transition-transform' />
                 Add to Cart & Order
               </Button>

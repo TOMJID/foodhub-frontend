@@ -24,6 +24,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
+import { CartSheet } from "@/components/cart-sheet";
 
 export default function Home() {
   const { data: session, isPending } = authClient.useSession();
@@ -78,6 +79,7 @@ export default function Home() {
                 Login
               </Link>
             )}
+            <CartSheet />
 
             <Sheet>
               <SheetTrigger asChild>

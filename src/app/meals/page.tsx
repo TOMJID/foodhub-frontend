@@ -6,6 +6,7 @@ import { Loader2, Search, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MealCard } from "@/components/meal-card";
+import { CartSheet } from "@/components/cart-sheet";
 
 interface Meal {
   id: string;
@@ -14,7 +15,7 @@ interface Meal {
   imageUrl: string | null;
   description: string | null;
   category: { name: string } | null;
-  provider: { restaurantName: string } | null;
+  provider: { id: string; restaurantName: string } | null;
 }
 
 export default function MealsPage() {
@@ -74,6 +75,7 @@ export default function MealsPage() {
               className='text-xs font-black uppercase tracking-widest text-charcoal hover:text-brand transition-colors'>
               Account
             </Link>
+            <CartSheet />
           </nav>
         </div>
       </header>
@@ -132,8 +134,9 @@ export default function MealsPage() {
                 price={Number(meal.price)}
                 imageUrl={meal.imageUrl}
                 description={meal.description}
-                category={meal.category?.name}
-                providerName={meal.provider?.restaurantName}
+                category={meal.category?.name || undefined}
+                providerName={meal.provider?.restaurantName || undefined}
+                providerId={meal.provider?.id || ""}
               />
             ))}
           </div>

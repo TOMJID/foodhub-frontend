@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MealCard } from "@/components/meal-card";
+import { CartSheet } from "@/components/cart-sheet";
 
 interface Meal {
   id: string;
@@ -132,6 +133,7 @@ export default function ProviderDetailsPage() {
             <Badge className='bg-charcoal text-white rounded-none font-black text-[10px] uppercase tracking-[0.2em] px-3 py-1.5'>
               {provider.cuisineType}
             </Badge>
+            <CartSheet />
           </div>
         </div>
       </header>
@@ -213,6 +215,7 @@ export default function ProviderDetailsPage() {
                 description={meal.description}
                 category={meal.category?.name}
                 providerName={provider.restaurantName}
+                providerId={provider.id}
               />
             ))}
           </div>

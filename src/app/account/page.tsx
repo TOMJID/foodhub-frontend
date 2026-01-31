@@ -1,7 +1,7 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -46,11 +46,24 @@ interface Order {
   createdAt: string;
 }
 
-export default function AccountPage() {
+import { Suspense } from "react";
+
+function AccountPageContent() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
+  const searchParams = useSearchParams();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isOrdersLoading, setIsOrdersLoading] = useState(true);
+
+  const initialTab = searchParams.get("tab") || "profile";
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -185,7 +198,10 @@ export default function AccountPage() {
               Dashboard
             </h1>
 
-            <Tabs defaultValue='profile' className='w-full'>
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className='w-full'>
               <TabsList className='bg-charcoal p-1 rounded-none h-auto flex flex-wrap lg:flex-nowrap gap-1'>
                 <TabsTrigger
                   value='profile'
@@ -338,7 +354,7 @@ export default function AccountPage() {
                                     Total Amount
                                   </p>
                                   <p className='text-lg font-black text-charcoal'>
-                                    ${order.totalAmount.toFixed(2)}
+                                    ${Number(order.totalAmount).toFixed(2)}
                                   </p>
                                 </div>
                                 <Button
@@ -380,5 +396,18 @@ export default function AccountPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className='min-h-screen bg-cream flex items-center justify-center'>
+          <Loader2 className='size-16 text-brand animate-spin' />
+        </div>
+      }>
+      <AccountPageContent />
+    </Suspense>
   );
 }
