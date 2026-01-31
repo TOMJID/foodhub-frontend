@@ -61,8 +61,8 @@ export default function RegisterPage() {
         error.message || "Failed to create account. Please try again.",
       );
     } else {
-      toast.success("Account created successfully! Welcome to FoodHub.");
-      router.push("/");
+      toast.success("Account created successfully! Please verify your email.");
+      router.push(`/verify-request?email=${encodeURIComponent(values.email)}`);
     }
     setIsLoading(false);
   }
