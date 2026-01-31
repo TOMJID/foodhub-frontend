@@ -61,13 +61,6 @@ export default function LoginPage() {
     setIsLoading(false);
   }
 
-  const handleGoogleSignIn = async () => {
-    await authClient.signIn.social({
-      provider: "google",
-      callbackURL: "/",
-    });
-  };
-
   return (
     <div className='flex flex-col lg:flex-row min-h-screen bg-cream'>
       {/* --- Visual Side (Left) --- */}
@@ -154,7 +147,7 @@ export default function LoginPage() {
                           Password
                         </FormLabel>
                         <Link
-                          href='#'
+                          href='/forgot-password'
                           className='text-[10px] font-black uppercase text-brand hover:underline'>
                           Forgot Password?
                         </Link>

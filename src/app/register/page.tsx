@@ -67,13 +67,6 @@ export default function RegisterPage() {
     setIsLoading(false);
   }
 
-  const handleGoogleSignIn = async () => {
-    await authClient.signIn.social({
-      provider: "google",
-      callbackURL: "/",
-    });
-  };
-
   return (
     <div className='flex flex-col lg:flex-row min-h-screen bg-cream'>
       {/* --- Visual Side (Left) --- */}
