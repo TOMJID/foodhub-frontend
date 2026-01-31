@@ -1,0 +1,43 @@
+import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
+
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_AUTH_URL ||
+  "https://food-hub-backend-inky.vercel.app";
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ orderId: string }> },
+) {
+  try {
+    const { orderId } = await params;
+    const cookieStore = await cookies();
+
+    // Get all cookies and format them for the backend
+    const cookieHeader = cookieStore
+      .getAll()
+      .map((c) => `${c.name}=${c.value}`)
+      .join("; ");
+
+    const response = await fetch(
+      `${BACKEND_URL}/api/orders/cancel/${orderId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: cookieHeader,
+        },
+      },
+    );
+
+    const data = await response.json();
+
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    console.error("Cancel order API error:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to cancel order" },
+      { status: 500 },
+    );
+  }
+}

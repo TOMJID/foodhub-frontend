@@ -26,6 +26,8 @@ import {
   Star,
   MessageSquare,
   ChevronRight,
+  XCircle,
+  AlertCircle,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +39,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "react-hot-toast";
 
@@ -90,6 +93,43 @@ function AccountPageContent() {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  // Cancel order state
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(
+    null,
+  );
+  const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
+
+  const confirmCancelOrder = async () => {
+    if (!orderToCancel) return;
+
+    setCancellingOrderId(orderToCancel);
+    try {
+      const response = await fetch(`/api/orders/cancel/${orderToCancel}`, {
+        method: "PATCH",
+        credentials: "include",
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Order cancelled successfully");
+        // Update the orders list with the cancelled status
+        setOrders(
+          orders.map((o) =>
+            o.id === orderToCancel ? { ...o, status: "cancelled" } : o,
+          ),
+        );
+        setOrderToCancel(null);
+      } else {
+        toast.error(data.error || "Failed to cancel order");
+      }
+    } catch (error) {
+      console.error("Cancel order error:", error);
+      toast.error("Failed to cancel order");
+    } finally {
+      setCancellingOrderId(null);
+    }
+  };
 
   useEffect(() => {
     const tabFromUrl = searchParams.get("tab");
@@ -432,6 +472,16 @@ function AccountPageContent() {
                                       Review Items
                                     </Button>
                                   )}
+                                  {order.status === "placed" && (
+                                    <Button
+                                      onClick={() => setOrderToCancel(order.id)}
+                                      size='sm'
+                                      variant='outline'
+                                      className='border-2 border-red-500 text-red-600 rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all'>
+                                      <XCircle className='size-3 mr-1.5' />
+                                      Cancel
+                                    </Button>
+                                  )}
                                   <Button
                                     asChild
                                     variant='outline'
@@ -587,6 +637,57 @@ function AccountPageContent() {
                 "Dispatch Review"
               )}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Order Confirmation Dialog */}
+      <Dialog
+        open={!!orderToCancel}
+        onOpenChange={(open) => !open && setOrderToCancel(null)}>
+        <DialogContent className='bg-cream border-4 border-charcoal rounded-none p-0 max-w-md overflow-hidden shadow-[16px_16px_0px_0px_rgba(10,10,10,1)]'>
+          <DialogHeader className='bg-red-500 text-white p-8'>
+            <div className='flex items-center gap-4'>
+              <div className='size-14 bg-white border-4 border-white flex items-center justify-center rotate-3'>
+                <AlertCircle className='size-8 text-red-500' />
+              </div>
+              <div>
+                <DialogTitle className='font-serif font-black text-2xl uppercase tracking-tighter italic'>
+                  Cancel Order?
+                </DialogTitle>
+                <DialogDescription className='text-white/80 text-[10px] font-black uppercase tracking-[0.2em] mt-1'>
+                  This action cannot be undone
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className='p-8 space-y-6'>
+            <p className='text-sm font-bold text-charcoal/70'>
+              Are you sure you want to cancel this order? Your order will be
+              voided and you will need to place a new order if you change your
+              mind.
+            </p>
+            <DialogFooter className='flex gap-4 sm:gap-4'>
+              <Button
+                variant='outline'
+                onClick={() => setOrderToCancel(null)}
+                className='flex-1 h-12 rounded-none border-2 border-charcoal font-black uppercase tracking-widest text-xs hover:bg-charcoal hover:text-white transition-all'>
+                Keep Order
+              </Button>
+              <Button
+                onClick={confirmCancelOrder}
+                disabled={cancellingOrderId !== null}
+                className='flex-1 h-12 bg-red-500 text-white rounded-none border-2 border-red-500 font-black uppercase tracking-widest text-xs hover:bg-red-600 transition-all'>
+                {cancellingOrderId ? (
+                  <>
+                    <Loader2 className='size-4 mr-2 animate-spin' />
+                    Cancelling...
+                  </>
+                ) : (
+                  "Yes, Cancel"
+                )}
+              </Button>
+            </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>

@@ -14,6 +14,7 @@ import {
   Truck,
   CheckCircle2,
   AlertCircle,
+  XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,9 +24,18 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import Image from "next/image";
+import { toast } from "react-hot-toast";
 
 interface OrderItem {
   id: string;
@@ -135,6 +145,35 @@ export default function OrderDetailsPage() {
       fetchOrder();
     }
   }, [id, session]);
+
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+
+  const confirmCancelOrder = async () => {
+    if (!order || order.status !== "placed") return;
+
+    setIsCancelling(true);
+    try {
+      const response = await fetch(`/api/orders/cancel/${order.id}`, {
+        method: "PATCH",
+        credentials: "include",
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Order cancelled successfully");
+        setOrder({ ...order, status: "cancelled" });
+        setShowCancelDialog(false);
+      } else {
+        toast.error(data.error || "Failed to cancel order");
+      }
+    } catch (error) {
+      console.error("Cancel order error:", error);
+      toast.error("Failed to cancel order");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   if (isAuthLoading || isLoading) {
     return (
@@ -378,11 +417,71 @@ export default function OrderDetailsPage() {
                   className='w-full h-16 bg-charcoal text-white rounded-none border-4 border-charcoal font-black uppercase tracking-widest text-sm hover:bg-brand transition-all shadow-[8px_8px_0px_0px_rgba(10,10,10,1)] active:shadow-none'>
                   <Link href='/meals'>Reorder Again</Link>
                 </Button>
+
+                {/* Cancel Order Button - only shown when status is "placed" */}
+                {order.status === "placed" && (
+                  <Button
+                    onClick={() => setShowCancelDialog(true)}
+                    variant='outline'
+                    className='w-full h-14 bg-white text-red-600 rounded-none border-4 border-red-500 font-black uppercase tracking-widest text-sm hover:bg-red-500 hover:text-white transition-all'>
+                    <XCircle className='size-4 mr-2' />
+                    Cancel Order
+                  </Button>
+                )}
               </div>
             </div>
           </div>
         </div>
       </main>
+
+      {/* Cancel Order Confirmation Dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent className='bg-cream border-4 border-charcoal rounded-none p-0 max-w-md overflow-hidden shadow-[16px_16px_0px_0px_rgba(10,10,10,1)]'>
+          <DialogHeader className='bg-red-500 text-white p-8'>
+            <div className='flex items-center gap-4'>
+              <div className='size-14 bg-white border-4 border-white flex items-center justify-center rotate-3'>
+                <AlertCircle className='size-8 text-red-500' />
+              </div>
+              <div>
+                <DialogTitle className='font-serif font-black text-2xl uppercase tracking-tighter italic'>
+                  Cancel Order?
+                </DialogTitle>
+                <DialogDescription className='text-white/80 text-[10px] font-black uppercase tracking-[0.2em] mt-1'>
+                  This action cannot be undone
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className='p-8 space-y-6'>
+            <p className='text-sm font-bold text-charcoal/70'>
+              Are you sure you want to cancel this order? Your order will be
+              voided and you will need to place a new order if you change your
+              mind.
+            </p>
+            <DialogFooter className='flex gap-4 sm:gap-4'>
+              <Button
+                variant='outline'
+                onClick={() => setShowCancelDialog(false)}
+                className='flex-1 h-12 rounded-none border-2 border-charcoal font-black uppercase tracking-widest text-xs hover:bg-charcoal hover:text-white transition-all'>
+                Keep Order
+              </Button>
+              <Button
+                onClick={confirmCancelOrder}
+                disabled={isCancelling}
+                className='flex-1 h-12 bg-red-500 text-white rounded-none border-2 border-red-500 font-black uppercase tracking-widest text-xs hover:bg-red-600 transition-all'>
+                {isCancelling ? (
+                  <>
+                    <Loader2 className='size-4 mr-2 animate-spin' />
+                    Cancelling...
+                  </>
+                ) : (
+                  "Yes, Cancel"
+                )}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
