@@ -33,8 +33,8 @@ interface Order {
   status: string;
   deliveryAddress: string;
   createdAt: string;
-  customer: { name: string };
-  provider: { restaurantName: string };
+  customer?: { name: string };
+  provider?: { restaurantName: string };
   items: {
     meal: { name: string };
     quantity: number;
@@ -87,10 +87,12 @@ export default function AdminOrdersPage() {
   const filteredOrders = orders.filter(
     (order) =>
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.provider.restaurantName
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()),
+      (order.customer?.name?.toLowerCase() || "").includes(
+        searchQuery.toLowerCase(),
+      ) ||
+      (order.provider?.restaurantName?.toLowerCase() || "").includes(
+        searchQuery.toLowerCase(),
+      ),
   );
 
   return (
@@ -176,7 +178,8 @@ export default function AdminOrdersPage() {
                               <ChefHat className='size-3 text-brand' />
                             </div>
                             <span className='font-black text-[10px] uppercase text-charcoal truncate max-w-[120px]'>
-                              {order.provider.restaurantName}
+                              {order.provider?.restaurantName ||
+                                "Unknown Provider"}
                             </span>
                           </div>
                           <div className='flex items-center gap-2'>
@@ -184,7 +187,7 @@ export default function AdminOrdersPage() {
                               <Receipt className='size-3 text-charcoal' />
                             </div>
                             <span className='font-bold text-[8px] uppercase text-gray-400 truncate max-w-[120px]'>
-                              {order.customer.name}
+                              {order.customer?.name || "Unknown Customer"}
                             </span>
                           </div>
                         </div>
@@ -204,7 +207,7 @@ export default function AdminOrdersPage() {
                             ${Number(order.totalAmount).toFixed(2)}
                           </span>
                           <span className='text-[8px] font-bold text-gray-400 uppercase tracking-widest'>
-                            {order.items.reduce(
+                            {(order.items || []).reduce(
                               (acc, i) => acc + i.quantity,
                               0,
                             )}{" "}
