@@ -1,9 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
+import { User } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -22,6 +26,8 @@ import {
 import { Menu } from "lucide-react";
 
 export default function Home() {
+  const { data: session, isPending } = authClient.useSession();
+
   return (
     <div className='flex flex-col min-h-screen'>
       {/* --- Navbar --- */}
@@ -53,11 +59,22 @@ export default function Home() {
           </NavigationMenu>
 
           <div className='flex items-center gap-4'>
-            <Link
-              href='/login'
-              className='hidden md:block text-sm font-bold uppercase tracking-widest hover:text-brand transition-colors'>
-              Login
-            </Link>
+            {isPending ? (
+              <div className='hidden md:block w-24 h-10 bg-charcoal/5 animate-pulse' />
+            ) : session ? (
+              <Link
+                href='/account'
+                className='hidden md:flex items-center gap-2 bg-charcoal text-white px-4 py-2 text-xs font-black uppercase tracking-widest border-[3px] border-charcoal hover:bg-brand transition-colors shadow-[4px_4px_0px_0px_rgba(255,87,34,1)]'>
+                <User className='size-4' />
+                Account
+              </Link>
+            ) : (
+              <Link
+                href='/login'
+                className='hidden md:block text-sm font-bold uppercase tracking-widest hover:text-brand transition-colors'>
+                Login
+              </Link>
+            )}
 
             <Sheet>
               <SheetTrigger asChild>
@@ -85,11 +102,22 @@ export default function Home() {
                     Restaurants
                   </Link>
                   <Separator className='bg-charcoal/10' />
-                  <Link
-                    href='/login'
-                    className='text-xl font-black uppercase text-brand'>
-                    Login
-                  </Link>
+                  {isPending ? (
+                    <div className='w-full h-8 bg-charcoal/5 animate-pulse rounded' />
+                  ) : session ? (
+                    <Link
+                      href='/account'
+                      className='text-xl font-black uppercase text-brand flex items-center gap-2'>
+                      <User className='size-5' />
+                      Account
+                    </Link>
+                  ) : (
+                    <Link
+                      href='/login'
+                      className='text-xl font-black uppercase text-brand'>
+                      Login
+                    </Link>
+                  )}
                 </div>
               </SheetContent>
             </Sheet>
