@@ -430,10 +430,13 @@ function AccountPageContent() {
                                     </Button>
                                   )}
                                   <Button
+                                    asChild
                                     variant='outline'
                                     size='sm'
                                     className='border-2 border-charcoal rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-charcoal hover:text-white transition-all'>
-                                    View Details
+                                    <Link href={`/orders/${order.id}`}>
+                                      View Details
+                                    </Link>
                                   </Button>
                                 </div>
                               </div>
