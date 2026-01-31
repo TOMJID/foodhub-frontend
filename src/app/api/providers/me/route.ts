@@ -32,3 +32,34 @@ export async function GET() {
     );
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const cookieStore = await cookies();
+
+    const cookieHeader = cookieStore
+      .getAll()
+      .map((c) => `${c.name}=${c.value}`)
+      .join("; ");
+
+    const response = await fetch(`${BACKEND_URL}/api/providers/me`, {
+      method: "PATCH",
+      headers: {
+        Cookie: cookieHeader,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    console.error("Update provider profile API error:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to update provider profile" },
+      { status: 500 },
+    );
+  }
+}

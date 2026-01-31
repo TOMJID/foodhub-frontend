@@ -28,6 +28,8 @@ import {
   XCircle,
   AlertCircle,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -106,6 +108,16 @@ function AccountPageContent() {
   const [providerProfile, setProviderProfile] =
     useState<ProviderProfile | null>(null);
   const [isProviderLoading, setIsProviderLoading] = useState(false);
+
+  // Edit Profile States
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [editForm, setEditForm] = useState({
+    restaurantName: "",
+    cuisineType: "",
+    address: "",
+    coverImageUrl: "",
+  });
 
   // Review states
   const [reviewingOrder, setReviewingOrder] = useState<Order | null>(null);
@@ -231,6 +243,47 @@ function AccountPageContent() {
   const handleLogout = async () => {
     await authClient.signOut();
     router.push("/");
+  };
+
+  const openEditDialog = () => {
+    if (providerProfile) {
+      setEditForm({
+        restaurantName: providerProfile.restaurantName,
+        cuisineType: providerProfile.cuisineType,
+        address: providerProfile.address,
+        coverImageUrl: providerProfile.coverImageUrl || "",
+      });
+      setIsEditProfileOpen(true);
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    setIsUpdatingProfile(true);
+    try {
+      const response = await fetch("/api/providers/me", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Profile updated successfully!");
+        setProviderProfile({
+          ...providerProfile!,
+          ...editForm,
+        });
+        setIsEditProfileOpen(false);
+      } else {
+        toast.error(data.error || "Failed to update profile.");
+      }
+    } catch {
+      toast.error("Connection error. Please try again.");
+    } finally {
+      setIsUpdatingProfile(false);
+    }
   };
 
   const submitReview = async () => {
@@ -592,6 +645,7 @@ function AccountPageContent() {
                             </Button>
                             <Button
                               variant='outline'
+                              onClick={openEditDialog}
                               className='w-full border-2 border-charcoal font-black uppercase tracking-widest text-[10px] h-12 rounded-none hover:bg-charcoal hover:text-white transition-all'>
                               Edit Store Info
                             </Button>
@@ -913,6 +967,88 @@ function AccountPageContent() {
                 ) : (
                   "Yes, Cancel"
                 )}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* --- Edit Store Info Dialog --- */}
+      <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
+        <DialogContent className='bg-cream border-4 border-charcoal rounded-none p-0 max-w-lg overflow-hidden shadow-[16px_16px_0px_0px_rgba(10,10,10,1)]'>
+          <DialogHeader className='bg-charcoal text-white p-8'>
+            <DialogTitle className='font-serif font-black text-3xl uppercase tracking-tighter italic'>
+              Edit Store Profile
+            </DialogTitle>
+            <DialogDescription className='text-brand text-[10px] font-black uppercase tracking-[0.3em]'>
+              Update your business identity
+            </DialogDescription>
+          </DialogHeader>
+          <div className='p-8 space-y-6'>
+            <div className='space-y-4'>
+              <div className='space-y-2'>
+                <Label className='text-[10px] font-black uppercase tracking-widest text-charcoal'>
+                  Restaurant Name
+                </Label>
+                <Input
+                  value={editForm.restaurantName}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, restaurantName: e.target.value })
+                  }
+                  className='h-12 border-2 border-charcoal rounded-none font-bold focus-visible:ring-brand'
+                />
+              </div>
+              <div className='space-y-2'>
+                <Label className='text-[10px] font-black uppercase tracking-widest text-charcoal'>
+                  Cuisine Type
+                </Label>
+                <Input
+                  value={editForm.cuisineType}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, cuisineType: e.target.value })
+                  }
+                  className='h-12 border-2 border-charcoal rounded-none font-bold focus-visible:ring-brand'
+                />
+              </div>
+              <div className='space-y-2'>
+                <Label className='text-[10px] font-black uppercase tracking-widest text-charcoal'>
+                  Address
+                </Label>
+                <Input
+                  value={editForm.address}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, address: e.target.value })
+                  }
+                  className='h-12 border-2 border-charcoal rounded-none font-bold focus-visible:ring-brand'
+                />
+              </div>
+              <div className='space-y-2'>
+                <Label className='text-[10px] font-black uppercase tracking-widest text-charcoal'>
+                  Cover Image URL
+                </Label>
+                <Input
+                  value={editForm.coverImageUrl}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, coverImageUrl: e.target.value })
+                  }
+                  className='h-12 border-2 border-charcoal rounded-none font-bold focus-visible:ring-brand'
+                  placeholder='https://...'
+                />
+              </div>
+            </div>
+
+            <DialogFooter className='pt-4 gap-4'>
+              <Button
+                variant='outline'
+                onClick={() => setIsEditProfileOpen(false)}
+                className='flex-1 h-12 rounded-none border-2 border-charcoal font-black uppercase tracking-widest text-xs hover:bg-charcoal hover:text-white transition-all'>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdateProfile}
+                disabled={isUpdatingProfile}
+                className='flex-1 h-12 bg-brand text-white rounded-none border-2 border-charcoal font-black uppercase tracking-widest text-xs hover:bg-white hover:text-brand transition-all shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] hover:shadow-none'>
+                {isUpdatingProfile ? "Saving..." : "Save Changes"}
               </Button>
             </DialogFooter>
           </div>
