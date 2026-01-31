@@ -44,7 +44,15 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
 
-    return NextResponse.json(data, { status: response.status });
+    const nextResponse = NextResponse.json(data, { status: response.status });
+
+    // Forward Set-Cookie header if present to handle session updates
+    const setCookie = response.headers.get("set-cookie");
+    if (setCookie) {
+      nextResponse.headers.set("Set-Cookie", setCookie);
+    }
+
+    return nextResponse;
   } catch (error) {
     console.error("Create provider API error:", error);
     return NextResponse.json(
