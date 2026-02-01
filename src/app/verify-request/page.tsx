@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Mail, ArrowRight, ArrowLeft } from "lucide-react";
+import { Mail, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 
@@ -45,16 +45,12 @@ function VerifyRequestContent() {
             click the link to activate your account and start your culinary
             journey.
           </p>
+          <p className='text-gray-600 font-medium leading-relaxed'>
+            If you don&apos;t see the email in your inbox, please check your
+            spam folder.
+          </p>
 
           <div className='w-full pt-4 space-y-4'>
-            <Button
-              asChild
-              className='w-full h-14 bg-brand text-white text-sm font-black uppercase rounded-none border-[3px] border-charcoal shadow-[6px_6px_0px_0px_rgba(10,10,10,1)] hover:bg-brand-dark transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[10px_10px_0px_0px_rgba(10,10,10,1)] active:translate-x-0 active:translate-y-0 active:shadow-none'>
-              <a href={`mailto:${email}`}>
-                Open Email App <ArrowRight className='ml-2 size-4' />
-              </a>
-            </Button>
-
             <Button
               variant='outline'
               asChild
@@ -65,14 +61,6 @@ function VerifyRequestContent() {
             </Button>
           </div>
         </div>
-
-        {/* Footer */}
-        <p className='mt-12 text-center text-xs font-bold text-gray-400 uppercase tracking-widest leading-relaxed px-4'>
-          Didn&apos;t receive the email? Check your spam folder or{" "}
-          <button className='text-brand hover:underline font-black'>
-            click here to resend
-          </button>
-        </p>
       </div>
     </div>
   );

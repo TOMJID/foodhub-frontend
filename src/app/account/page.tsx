@@ -72,8 +72,22 @@ interface Order {
   id: string;
   status: string;
   totalAmount: number;
+  deliveryAddress?: string;
   createdAt: string;
   items: OrderItem[];
+  customerId?: string;
+  providerId?: string;
+  customer?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  provider?: {
+    id: string;
+    restaurantName: string;
+    cuisineType: string;
+    address: string;
+  };
 }
 
 interface ProviderProfile {
@@ -137,6 +151,24 @@ function AccountPageContent() {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  // Orders sub-tab state (for providers)
+  const [ordersType, setOrdersType] = useState<"placed" | "received">("placed");
+
+  // Filtered orders
+  const placedOrders = orders.filter(
+    (o) =>
+      o.customerId === user.id ||
+      o.customer?.email === user.email ||
+      // If none of these match and it's not clearly a received order, assume placed
+      (user.role !== "provider" ? true : o.providerId !== providerProfile?.id),
+  );
+
+  const receivedOrders = orders.filter(
+    (o) =>
+      o.providerId === providerProfile?.id ||
+      o.provider?.restaurantName === providerProfile?.restaurantName,
+  );
 
   // Cancel order state
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(
@@ -747,13 +779,50 @@ function AccountPageContent() {
 
                 <TabsContent value='orders'>
                   <Card className='rounded-none border-4 border-charcoal bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'>
-                    <CardHeader>
-                      <CardTitle className='font-serif font-black text-2xl uppercase tracking-tighter text-charcoal'>
-                        Order History
-                      </CardTitle>
-                      <CardDescription className='text-[10px] font-black uppercase tracking-[0.2em] text-brand'>
-                        Your culinary journey
-                      </CardDescription>
+                    <CardHeader className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
+                      <div>
+                        <CardTitle className='font-serif font-black text-2xl uppercase tracking-tighter text-charcoal'>
+                          {user.role === "provider"
+                            ? ordersType === "placed"
+                              ? "Orders Placed"
+                              : "Orders Received"
+                            : "Order History"}
+                        </CardTitle>
+                        <CardDescription className='text-[10px] font-black uppercase tracking-[0.2em] text-brand'>
+                          {user.role === "provider"
+                            ? ordersType === "placed"
+                              ? "Your culinary journey as a customer"
+                              : "Orders placed by your customers"
+                            : "Your culinary journey"}
+                        </CardDescription>
+                      </div>
+
+                      {user.role === "provider" && (
+                        <div className='flex bg-cream p-1 border-2 border-charcoal'>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => setOrdersType("placed")}
+                            className={`rounded-none text-[10px] font-black uppercase tracking-widest h-8 px-4 ${
+                              ordersType === "placed"
+                                ? "bg-charcoal text-white"
+                                : "text-charcoal/50 hover:text-charcoal"
+                            }`}>
+                            My Orders
+                          </Button>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => setOrdersType("received")}
+                            className={`rounded-none text-[10px] font-black uppercase tracking-widest h-8 px-4 ${
+                              ordersType === "received"
+                                ? "bg-charcoal text-white"
+                                : "text-charcoal/50 hover:text-charcoal"
+                            }`}>
+                            Received
+                          </Button>
+                        </div>
+                      )}
                     </CardHeader>
                     <CardContent>
                       {isOrdersLoading ? (
@@ -763,20 +832,37 @@ function AccountPageContent() {
                             size='lg'
                           />
                         </div>
-                      ) : orders.length > 0 ? (
+                      ) : (user.role === "provider"
+                          ? ordersType === "placed"
+                            ? placedOrders
+                            : receivedOrders
+                          : orders
+                        ).length > 0 ? (
                         <div className='space-y-6'>
-                          {orders.map((order) => (
+                          {(user.role === "provider"
+                            ? ordersType === "placed"
+                              ? placedOrders
+                              : receivedOrders
+                            : orders
+                          ).map((order) => (
                             <div
                               key={order.id}
                               className='border-4 border-charcoal p-4 group hover:bg-cream transition-colors'>
                               <div className='flex justify-between items-start mb-4'>
                                 <div>
-                                  <p className='text-[10px] font-black uppercase text-gray-400'>
-                                    Order ID
-                                  </p>
-                                  <p className='font-black text-xs text-charcoal'>
-                                    #{order.id.slice(-8).toUpperCase()}
-                                  </p>
+                                  <div className='flex items-center gap-2 mb-1'>
+                                    <p className='text-[10px] font-black uppercase text-gray-400'>
+                                      Order ID
+                                    </p>
+                                    <p className='font-black text-[10px] text-charcoal'>
+                                      #{order.id.slice(-8).toUpperCase()}
+                                    </p>
+                                  </div>
+                                  <h4 className='font-serif font-black text-lg uppercase leading-none'>
+                                    {ordersType === "received"
+                                      ? `From: ${order.customer?.name || "Customer"}`
+                                      : `At: ${order.provider?.restaurantName || "Restaurant"}`}
+                                  </h4>
                                 </div>
                                 <Badge className='bg-brand text-white border-none rounded-none uppercase text-[8px] font-black px-2 py-1'>
                                   {order.status}
@@ -784,31 +870,49 @@ function AccountPageContent() {
                               </div>
                               <div className='flex justify-between items-end'>
                                 <div>
-                                  <p className='text-[10px] font-black uppercase text-gray-400'>
-                                    Total Amount
+                                  <p className='text-[10px] font-black uppercase text-gray-400 mb-1'>
+                                    {order.items.length}{" "}
+                                    {order.items.length === 1
+                                      ? "Item"
+                                      : "Items"}{" "}
+                                    • Total Amount
                                   </p>
-                                  <p className='text-lg font-black text-charcoal'>
+                                  <p className='text-xl font-black text-charcoal'>
                                     ${Number(order.totalAmount).toFixed(2)}
                                   </p>
                                 </div>
                                 <div className='flex flex-col items-end gap-2'>
-                                  {order.status === "delivered" && (
+                                  {ordersType === "placed" &&
+                                    order.status === "delivered" && (
+                                      <Button
+                                        onClick={() => setReviewingOrder(order)}
+                                        size='sm'
+                                        className='bg-brand text-white border-2 border-charcoal rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-white hover:text-brand transition-all shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] hover:shadow-none'>
+                                        <Star className='size-3 mr-1.5' />
+                                        Review Items
+                                      </Button>
+                                    )}
+                                  {ordersType === "placed" &&
+                                    order.status === "placed" && (
+                                      <Button
+                                        onClick={() =>
+                                          setOrderToCancel(order.id)
+                                        }
+                                        size='sm'
+                                        variant='outline'
+                                        className='border-2 border-red-500 text-red-600 rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all'>
+                                        <XCircle className='size-3 mr-1.5' />
+                                        Cancel
+                                      </Button>
+                                    )}
+                                  {ordersType === "received" && (
                                     <Button
-                                      onClick={() => setReviewingOrder(order)}
+                                      asChild
                                       size='sm'
-                                      className='bg-brand text-white border-2 border-charcoal rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-white hover:text-brand transition-all shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] hover:shadow-none'>
-                                      <Star className='size-3 mr-1.5' />
-                                      Review Items
-                                    </Button>
-                                  )}
-                                  {order.status === "placed" && (
-                                    <Button
-                                      onClick={() => setOrderToCancel(order.id)}
-                                      size='sm'
-                                      variant='outline'
-                                      className='border-2 border-red-500 text-red-600 rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all'>
-                                      <XCircle className='size-3 mr-1.5' />
-                                      Cancel
+                                      className='bg-charcoal text-white border-2 border-charcoal rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-brand transition-all shadow-[4px_4px_0px_0px_rgba(255,87,34,1)] hover:shadow-none'>
+                                      <Link href='/restaurant-dashboard'>
+                                        Manage status
+                                      </Link>
                                     </Button>
                                   )}
                                   <Button
@@ -832,17 +936,23 @@ function AccountPageContent() {
                           </div>
                           <div>
                             <p className='text-xl font-black text-charcoal uppercase tracking-tighter'>
-                              No orders yet
+                              {ordersType === "placed"
+                                ? "No orders yet"
+                                : "No received orders"}
                             </p>
                             <p className='text-sm font-bold text-gray-400 mt-2 uppercase tracking-widest'>
-                              Hungry? Start exploring our menu!
+                              {ordersType === "placed"
+                                ? "Hungry? Start exploring our menu!"
+                                : "Your kitchen is waiting for its first ticket."}
                             </p>
                           </div>
-                          <Button
-                            asChild
-                            className='bg-brand text-white font-black uppercase tracking-widest rounded-none border-2 border-charcoal hover:bg-white hover:text-brand transition-all shadow-[4px_4px_0px_0px_rgba(10,10,10,1)]'>
-                            <Link href='/meals'>Browse Meals</Link>
-                          </Button>
+                          {ordersType === "placed" && (
+                            <Button
+                              asChild
+                              className='bg-brand text-white font-black uppercase tracking-widest rounded-none border-2 border-charcoal hover:bg-white hover:text-brand transition-all shadow-[4px_4px_0px_0px_rgba(10,10,10,1)]'>
+                              <Link href='/meals'>Browse Meals</Link>
+                            </Button>
+                          )}
                         </div>
                       )}
                     </CardContent>
