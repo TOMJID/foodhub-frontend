@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 interface Stats {
   totalUsers: number;
