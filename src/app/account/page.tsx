@@ -2,113 +2,32 @@
 
 import { authClient } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
-import Image from "next/image";
+import { useEffect, useState, Suspense, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  User,
-  Package,
-  LogOut,
-  Mail,
-  Calendar,
-  Store,
-  ChefHat,
-  Utensils,
-  Star,
-  MessageSquare,
-  ChevronRight,
-  XCircle,
-  AlertCircle,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { User, Package, Store } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { toast } from "react-hot-toast";
 
-interface UserWithExtras {
-  id: string;
-  email: string;
-  name: string;
-  image?: string | null;
-  role?: string;
-  address?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+//? Components
+import { AccountHeader } from "@/components/account/AccountHeader";
+import { AccountSidebar } from "@/components/account/AccountSidebar";
+import { ProfileTab } from "@/components/account/ProfileTab";
+import { StoreInfoTab } from "@/components/account/StoreInfoTab";
+import { OrdersTab } from "@/components/account/OrdersTab";
 
-interface OrderItem {
-  id: string;
-  mealId: string;
-  quantity: number;
-  priceAtTime: number;
-  meal: {
-    id: string;
-    name: string;
-    imageUrl?: string | null;
-  };
-}
+//? Dialogs
+import { EditUserDialog } from "@/components/account/dialogs/EditUserDialog";
+import { EditStoreDialog } from "@/components/account/dialogs/EditStoreDialog";
+import { ReviewDialog } from "@/components/account/dialogs/ReviewDialog";
+import { ReviewItemDialog } from "@/components/account/dialogs/ReviewItemDialog";
+import { CancelOrderDialog } from "@/components/account/dialogs/CancelOrderDialog";
 
-interface Order {
-  id: string;
-  status: string;
-  totalAmount: number;
-  deliveryAddress?: string;
-  createdAt: string;
-  items: OrderItem[];
-  customerId?: string;
-  providerId?: string;
-  customer?: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  provider?: {
-    id: string;
-    restaurantName: string;
-    cuisineType: string;
-    address: string;
-  };
-}
-
-interface ProviderProfile {
-  id: string;
-  userId: string;
-  restaurantName: string;
-  cuisineType: string;
-  address: string;
-  coverImageUrl?: string | null;
-  meals: {
-    id: string;
-    name: string;
-    description?: string | null;
-    price: number;
-    imageUrl?: string | null;
-    isAvailable: boolean;
-    category: {
-      name: string;
-    };
-  }[];
-}
+//? Types
+import {
+  UserWithExtras,
+  Order,
+  ProviderProfile,
+} from "@/components/account/types";
 
 function AccountPageContent() {
   const router = useRouter();
@@ -156,15 +75,13 @@ function AccountPageContent() {
   const [ordersType, setOrdersType] = useState<"placed" | "received">("placed");
 
   // Cancel order state
-  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(
-    null,
-  );
   const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
+  const [isCancellingOrder, setIsCancellingOrder] = useState(false);
 
   const confirmCancelOrder = async () => {
     if (!orderToCancel) return;
 
-    setCancellingOrderId(orderToCancel);
+    setIsCancellingOrder(true);
     try {
       const response = await fetch(`/api/orders/cancel/${orderToCancel}`, {
         method: "PATCH",
@@ -174,7 +91,6 @@ function AccountPageContent() {
 
       if (data.success) {
         toast.success("Order cancelled successfully");
-        // Update the orders list with the cancelled status
         setOrders(
           orders.map((o) =>
             o.id === orderToCancel ? { ...o, status: "cancelled" } : o,
@@ -188,7 +104,7 @@ function AccountPageContent() {
       console.error("Cancel order error:", error);
       toast.error("Failed to cancel order");
     } finally {
-      setCancellingOrderId(null);
+      setIsCancellingOrder(null);
     }
   };
 
@@ -250,41 +166,31 @@ function AccountPageContent() {
     }
   }, [session, isPending, router]);
 
-  if (isPending) {
-    return (
-      <div className='min-h-screen bg-cream'>
-        <LoadingSpinner
-          text='Loading Account...'
-          size='xl'
-          className='h-screen'
-        />
-      </div>
-    );
-  }
-
-  if (!session) return null;
-
-  const user = session.user as UserWithExtras;
+  const user = session?.user as UserWithExtras;
 
   // Filtered orders
-  const placedOrders = orders.filter(
-    (o) =>
-      o.customerId === user.id ||
-      o.customer?.email === user.email ||
-      // If none of these match and it's not clearly a received order, assume placed
-      (user.role !== "provider" ? true : o.providerId !== providerProfile?.id),
+  const placedOrders = useMemo(
+    () =>
+      orders.filter(
+        (o) =>
+          o.customerId === user?.id ||
+          o.customer?.email === user?.email ||
+          (user?.role !== "provider"
+            ? true
+            : o.providerId !== providerProfile?.id),
+      ),
+    [orders, user, providerProfile],
   );
 
-  const receivedOrders = orders.filter(
-    (o) =>
-      o.providerId === providerProfile?.id ||
-      o.provider?.restaurantName === providerProfile?.restaurantName,
+  const receivedOrders = useMemo(
+    () =>
+      orders.filter(
+        (o) =>
+          o.providerId === providerProfile?.id ||
+          o.provider?.restaurantName === providerProfile?.restaurantName,
+      ),
+    [orders, providerProfile],
   );
-
-  const handleLogout = async () => {
-    await authClient.signOut();
-    router.push("/");
-  };
 
   const openEditDialog = () => {
     if (providerProfile) {
@@ -392,82 +298,27 @@ function AccountPageContent() {
     }
   };
 
+  if (isPending) {
+    return (
+      <div className='min-h-screen bg-cream'>
+        <LoadingSpinner
+          text='Loading Account...'
+          size='xl'
+          className='h-screen'
+        />
+      </div>
+    );
+  }
+
+  if (!session) return null;
+
   return (
     <div className='min-h-screen bg-cream selection:bg-brand selection:text-white'>
-      <header className='fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b-4 border-charcoal'>
-        <div className='max-w-7xl mx-auto px-6 h-20 flex items-center justify-between'>
-          <Link href='/' className='group'>
-            <span className='text-3xl font-serif font-black tracking-tighter text-charcoal group-hover:text-brand transition-colors'>
-              FOOD
-              <span className='text-brand group-hover:text-charcoal transition-colors'>
-                HUB
-              </span>
-            </span>
-          </Link>
-
-          <Button
-            variant='ghost'
-            onClick={handleLogout}
-            className='flex items-center gap-2 font-black uppercase tracking-widest text-charcoal hover:bg-brand hover:text-white transition-all border-2 border-transparent hover:border-charcoal rounded-none'>
-            <LogOut className='size-4' />
-            Logout
-          </Button>
-        </div>
-      </header>
+      <AccountHeader />
 
       <main className='max-w-7xl mx-auto px-6 pt-32 pb-20'>
         <div className='grid grid-cols-1 lg:grid-cols-4 gap-12'>
-          <div className='lg:col-span-1 space-y-8'>
-            <div className='bg-white border-4 border-charcoal p-6 shadow-[8px_8px_0px_0px_rgba(10,10,10,1)]'>
-              <div className='text-center space-y-4'>
-                <Avatar className='size-24 mx-auto border-4 border-charcoal shadow-[4px_4px_0px_0px_rgba(255,87,34,1)] rounded-none'>
-                  <AvatarImage
-                    src={user.image || ""}
-                    className='rounded-none object-cover'
-                  />
-                  <AvatarFallback className='bg-brand text-white font-black text-3xl rounded-none'>
-                    {user.name?.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h2 className='text-2xl font-serif font-black text-charcoal leading-tight'>
-                    {user.name}
-                  </h2>
-                  <Badge className='mt-2 bg-charcoal text-white rounded-none uppercase text-[10px] font-black tracking-widest border-none px-3 py-1'>
-                    {user.role}
-                  </Badge>
-                </div>
-              </div>
-
-              <Separator className='my-6 bg-charcoal/10' />
-
-              <div className='space-y-4'>
-                <div className='flex items-center gap-3 text-sm font-bold text-gray-600'>
-                  <Mail className='size-4 text-brand shrink-0' />
-                  <span className='truncate'>{user.email}</span>
-                </div>
-                <div className='flex items-center gap-3 text-sm font-bold text-gray-600'>
-                  <Calendar className='size-4 text-brand shrink-0' />
-                  <span>
-                    Joined {new Date(user.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-
-                {user.role === "provider" && (
-                  <Button
-                    asChild
-                    className='w-full bg-brand text-white font-black uppercase tracking-widest text-[10px] h-12 rounded-none border-2 border-charcoal shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] hover:bg-white hover:text-brand transition-all mt-4'>
-                    <Link
-                      href='/restaurant-dashboard'
-                      className='flex items-center gap-2'>
-                      <ChefHat className='size-4' />
-                      Manage Kitchen
-                    </Link>
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
+          <AccountSidebar user={user} />
 
           <div className='lg:col-span-3'>
             <h1 className='text-5xl font-serif font-black text-charcoal tracking-tighter mb-8 italic'>
@@ -503,462 +354,42 @@ function AccountPageContent() {
 
               <div className='mt-8'>
                 <TabsContent value='profile' className='space-y-8'>
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
-                    <Card className='rounded-none border-4 border-charcoal bg-white shadow-[8px_8px_0px_0px_rgba(255,87,34,1)]'>
-                      <CardHeader className='flex flex-row items-start justify-between space-y-0'>
-                        <div>
-                          <CardTitle className='font-serif font-black text-2xl uppercase tracking-tighter text-charcoal'>
-                            Account Overview
-                          </CardTitle>
-                          <CardDescription className='text-[10px] font-black uppercase tracking-[0.2em] text-brand'>
-                            Verified Profile Details
-                          </CardDescription>
-                        </div>
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={openEditUserDialog}
-                          className='border-2 border-charcoal rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-charcoal hover:text-white transition-all shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] hover:shadow-none'>
-                          Edit Profile
-                        </Button>
-                      </CardHeader>
-                      <CardContent className='grid grid-cols-1 gap-8'>
-                        <div className='space-y-4'>
-                          <div className='space-y-1'>
-                            <p className='text-[10px] font-black uppercase text-gray-400'>
-                              Full Name
-                            </p>
-                            <p className='font-bold text-charcoal'>
-                              {user.name}
-                            </p>
-                          </div>
-                          <div className='space-y-1'>
-                            <p className='text-[10px] font-black uppercase text-gray-400'>
-                              Email Address
-                            </p>
-                            <p className='font-bold text-charcoal'>
-                              {user.email}
-                            </p>
-                          </div>
-                          <div className='space-y-1'>
-                            <p className='text-[10px] font-black uppercase text-gray-400'>
-                              Primary Address
-                            </p>
-                            <p className='font-bold text-charcoal'>
-                              {user.address || "No address added yet"}
-                            </p>
-                          </div>
-                        </div>
-
-                        {user.role !== "provider" && (
-                          <div className='bg-cream border-2 border-charcoal border-dashed p-6 flex flex-col justify-center items-center text-center gap-4'>
-                            <div className='size-12 bg-white border-2 border-charcoal flex items-center justify-center rotate-3 shadow-[4px_4px_0px_0px_rgba(255,87,34,1)]'>
-                              <Store className='size-6 text-brand' />
-                            </div>
-                            <div className='space-y-1'>
-                              <p className='text-[10px] font-black uppercase text-charcoal'>
-                                Partner with us
-                              </p>
-                              <p className='text-xs font-medium text-gray-500'>
-                                Own a kitchen? Start selling on FoodHub today.
-                              </p>
-                            </div>
-                            <Button
-                              asChild
-                              className='w-full bg-charcoal text-white font-black uppercase tracking-widest text-[8px] h-10 rounded-none border-2 border-charcoal hover:bg-brand transition-all'>
-                              <Link href='/become-provider'>
-                                Become a Provider
-                              </Link>
-                            </Button>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    {user.role === "provider" && (
-                      <Card className='rounded-none border-4 border-charcoal bg-charcoal text-white shadow-[8px_8px_0px_0px_rgba(255,87,34,1)]'>
-                        <CardHeader>
-                          <CardTitle className='font-serif font-black text-2xl uppercase tracking-tighter italic'>
-                            Kitchen Statistics
-                          </CardTitle>
-                          <CardDescription className='text-brand text-[10px] font-black uppercase tracking-[0.2em]'>
-                            Live Menu Status
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className='space-y-8'>
-                          <div className='flex items-center gap-6'>
-                            <div className='size-16 bg-white border-4 border-brand flex items-center justify-center rotate-3'>
-                              <Utensils className='size-8 text-charcoal' />
-                            </div>
-                            <div>
-                              <p className='text-[10px] font-black uppercase tracking-widest text-white/50'>
-                                Active Meals
-                              </p>
-                              <p className='text-4xl font-serif font-black leading-none'>
-                                {isProviderLoading
-                                  ? "..."
-                                  : providerProfile?.meals.length || 0}
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            asChild
-                            className='w-full bg-brand text-white font-black uppercase tracking-widest text-[10px] h-12 rounded-none border-2 border-white hover:bg-white hover:text-brand transition-all'>
-                            <Link href='/restaurant-dashboard'>
-                              Open Management Console
-                            </Link>
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
+                  <ProfileTab
+                    user={user}
+                    providerProfile={providerProfile}
+                    isProviderLoading={isProviderLoading}
+                    onEditProfile={openEditUserDialog}
+                  />
                 </TabsContent>
 
                 {user.role === "provider" && (
                   <TabsContent value='provider' className='space-y-8'>
-                    <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
-                      {/* Store Overview */}
-                      <Card className='lg:col-span-2 rounded-none border-4 border-charcoal bg-white shadow-[8px_8px_0px_0px_rgba(255,87,34,1)]'>
-                        <CardHeader className='border-b-4 border-charcoal bg-charcoal text-white'>
-                          <CardTitle className='font-serif font-black text-2xl uppercase tracking-tighter italic'>
-                            Restaurant Details
-                          </CardTitle>
-                          <CardDescription className='text-brand text-[10px] font-black uppercase tracking-[0.2em]'>
-                            Your public business profile
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className='pt-8 space-y-8'>
-                          {isProviderLoading ? (
-                            <div className='py-12 flex justify-center'>
-                              <LoadingSpinner
-                                size='lg'
-                                text='Loading Store...'
-                              />
-                            </div>
-                          ) : providerProfile ? (
-                            <>
-                              <div className='relative h-48 border-4 border-charcoal overflow-hidden group bg-cream'>
-                                {providerProfile.coverImageUrl ? (
-                                  <Image
-                                    src={providerProfile.coverImageUrl}
-                                    alt={providerProfile.restaurantName}
-                                    fill
-                                    className='object-cover'
-                                  />
-                                ) : (
-                                  <div className='size-full flex flex-col items-center justify-center opacity-20'>
-                                    <Store className='size-12' />
-                                    <p className='font-black uppercase text-[10px] mt-2'>
-                                      No Cover Image
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
-                                <div className='space-y-6'>
-                                  <div className='space-y-1'>
-                                    <p className='text-[10px] font-black uppercase text-gray-400'>
-                                      Restaurant Name
-                                    </p>
-                                    <p className='text-2xl font-serif font-black text-charcoal'>
-                                      {providerProfile.restaurantName}
-                                    </p>
-                                  </div>
-                                  <div className='space-y-1'>
-                                    <p className='text-[10px] font-black uppercase text-gray-400'>
-                                      Cuisine Specialty
-                                    </p>
-                                    <Badge className='bg-brand text-white border-charcoal border-2 rounded-none uppercase text-[10px] font-black px-4 py-1'>
-                                      {providerProfile.cuisineType}
-                                    </Badge>
-                                  </div>
-                                </div>
-                                <div className='space-y-6'>
-                                  <div className='space-y-1'>
-                                    <p className='text-[10px] font-black uppercase text-gray-400'>
-                                      Location Address
-                                    </p>
-                                    <p className='font-bold text-charcoal'>
-                                      {providerProfile.address}
-                                    </p>
-                                  </div>
-                                  <div className='p-4 bg-cream border-2 border-charcoal border-dashed'>
-                                    <div className='flex items-center gap-2 mb-2'>
-                                      <Star className='size-3 text-brand fill-brand' />
-                                      <p className='text-[10px] font-black uppercase text-charcoal'>
-                                        Store Health
-                                      </p>
-                                    </div>
-                                    <p className='text-[8px] font-bold text-gray-500 uppercase'>
-                                      Your store is live and visible to all
-                                      customers.
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            </>
-                          ) : (
-                            <div className='py-12 text-center space-y-4'>
-                              <AlertCircle className='size-12 text-brand mx-auto' />
-                              <p className='font-black uppercase text-charcoal'>
-                                No profile found
-                              </p>
-                              <Button
-                                asChild
-                                className='rounded-none bg-charcoal text-white font-black uppercase tracking-widest text-[10px]'>
-                                <Link href='/become-provider'>
-                                  Create Profile
-                                </Link>
-                              </Button>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-
-                      {/* Store Side Stats */}
-                      <div className='space-y-8'>
-                        <Card className='rounded-none border-4 border-charcoal bg-white shadow-[8px_8px_0px_0px_rgba(10,10,10,1)]'>
-                          <CardHeader className='pb-2'>
-                            <CardTitle className='font-black uppercase text-xs tracking-widest text-charcoal'>
-                              Quick Actions
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className='space-y-4'>
-                            <Button
-                              asChild
-                              className='w-full bg-brand text-white font-black uppercase tracking-widest text-[10px] h-12 rounded-none border-2 border-charcoal shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] hover:shadow-none transition-all'>
-                              <Link href='/restaurant-dashboard'>
-                                <ChefHat className='size-4 mr-2' />
-                                Kitchen Console
-                              </Link>
-                            </Button>
-                            <Button
-                              variant='outline'
-                              onClick={openEditDialog}
-                              className='w-full border-2 border-charcoal font-black uppercase tracking-widest text-[10px] h-12 rounded-none hover:bg-charcoal hover:text-white transition-all'>
-                              Edit Store Info
-                            </Button>
-                          </CardContent>
-                        </Card>
-
-                        <Card className='rounded-none border-4 border-charcoal bg-charcoal text-white shadow-[8px_8px_0px_0px_rgba(255,87,34,1)]'>
-                          <CardHeader>
-                            <p className='text-[10px] font-black uppercase tracking-[0.2em] text-brand'>
-                              Menu Stats
-                            </p>
-                            <CardTitle className='font-serif font-black text-2xl uppercase tracking-tighter italic'>
-                              Inventory
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className='flex items-center justify-between border-b border-white/10 pb-4 mb-4'>
-                              <span className='text-[10px] font-black uppercase text-white/50'>
-                                Total Meals
-                              </span>
-                              <span className='text-3xl font-serif font-black text-brand'>
-                                {providerProfile?.meals.length || 0}
-                              </span>
-                            </div>
-                            <div className='flex items-center justify-between'>
-                              <span className='text-[10px] font-black uppercase text-white/50'>
-                                Available
-                              </span>
-                              <span className='text-xl font-bold'>
-                                {providerProfile?.meals.filter(
-                                  (m) => m.isAvailable,
-                                ).length || 0}
-                              </span>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    </div>
+                    <StoreInfoTab
+                      providerProfile={providerProfile}
+                      isProviderLoading={isProviderLoading}
+                      onEditStore={openEditDialog}
+                    />
                   </TabsContent>
                 )}
 
                 <TabsContent value='orders'>
-                  <Card className='rounded-none border-4 border-charcoal bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'>
-                    <CardHeader className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
-                      <div>
-                        <CardTitle className='font-serif font-black text-2xl uppercase tracking-tighter text-charcoal'>
-                          {user.role === "provider"
-                            ? ordersType === "placed"
-                              ? "Orders Placed"
-                              : "Orders Received"
-                            : "Order History"}
-                        </CardTitle>
-                        <CardDescription className='text-[10px] font-black uppercase tracking-[0.2em] text-brand'>
-                          {user.role === "provider"
-                            ? ordersType === "placed"
-                              ? "Your culinary journey as a customer"
-                              : "Orders placed by your customers"
-                            : "Your culinary journey"}
-                        </CardDescription>
-                      </div>
-
-                      {user.role === "provider" && (
-                        <div className='flex bg-cream p-1 border-2 border-charcoal'>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            onClick={() => setOrdersType("placed")}
-                            className={`rounded-none text-[10px] font-black uppercase tracking-widest h-8 px-4 ${
-                              ordersType === "placed"
-                                ? "bg-charcoal text-white"
-                                : "text-charcoal/50 hover:text-charcoal"
-                            }`}>
-                            My Orders
-                          </Button>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            onClick={() => setOrdersType("received")}
-                            className={`rounded-none text-[10px] font-black uppercase tracking-widest h-8 px-4 ${
-                              ordersType === "received"
-                                ? "bg-charcoal text-white"
-                                : "text-charcoal/50 hover:text-charcoal"
-                            }`}>
-                            Received
-                          </Button>
-                        </div>
-                      )}
-                    </CardHeader>
-                    <CardContent>
-                      {isOrdersLoading ? (
-                        <div className='py-20'>
-                          <LoadingSpinner
-                            text='Fetching your meals...'
-                            size='lg'
-                          />
-                        </div>
-                      ) : (user.role === "provider"
-                          ? ordersType === "placed"
-                            ? placedOrders
-                            : receivedOrders
-                          : orders
-                        ).length > 0 ? (
-                        <div className='space-y-6'>
-                          {(user.role === "provider"
-                            ? ordersType === "placed"
-                              ? placedOrders
-                              : receivedOrders
-                            : orders
-                          ).map((order) => (
-                            <div
-                              key={order.id}
-                              className='border-4 border-charcoal p-4 group hover:bg-cream transition-colors'>
-                              <div className='flex justify-between items-start mb-4'>
-                                <div>
-                                  <div className='flex items-center gap-2 mb-1'>
-                                    <p className='text-[10px] font-black uppercase text-gray-400'>
-                                      Order ID
-                                    </p>
-                                    <p className='font-black text-[10px] text-charcoal'>
-                                      #{order.id.slice(-8).toUpperCase()}
-                                    </p>
-                                  </div>
-                                  <h4 className='font-serif font-black text-lg uppercase leading-none'>
-                                    {ordersType === "received"
-                                      ? `From: ${order.customer?.name || "Customer"}`
-                                      : `At: ${order.provider?.restaurantName || "Restaurant"}`}
-                                  </h4>
-                                </div>
-                                <Badge className='bg-brand text-white border-none rounded-none uppercase text-[8px] font-black px-2 py-1'>
-                                  {order.status}
-                                </Badge>
-                              </div>
-                              <div className='flex justify-between items-end'>
-                                <div>
-                                  <p className='text-[10px] font-black uppercase text-gray-400 mb-1'>
-                                    {order.items.length}{" "}
-                                    {order.items.length === 1
-                                      ? "Item"
-                                      : "Items"}{" "}
-                                    • Total Amount
-                                  </p>
-                                  <p className='text-xl font-black text-charcoal'>
-                                    ${Number(order.totalAmount).toFixed(2)}
-                                  </p>
-                                </div>
-                                <div className='flex flex-col items-end gap-2'>
-                                  {ordersType === "placed" &&
-                                    order.status === "delivered" &&
-                                    (order.customerId === user.id ||
-                                      order.customer?.email === user.email) && (
-                                      <Button
-                                        onClick={() => setReviewingOrder(order)}
-                                        size='sm'
-                                        className='bg-brand text-white border-2 border-charcoal rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-white hover:text-brand transition-all shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] hover:shadow-none'>
-                                        <Star className='size-3 mr-1.5' />
-                                        Review Items
-                                      </Button>
-                                    )}
-                                  {ordersType === "placed" &&
-                                    order.status === "placed" && (
-                                      <Button
-                                        onClick={() =>
-                                          setOrderToCancel(order.id)
-                                        }
-                                        size='sm'
-                                        variant='outline'
-                                        className='border-2 border-red-500 text-red-600 rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all'>
-                                        <XCircle className='size-3 mr-1.5' />
-                                        Cancel
-                                      </Button>
-                                    )}
-                                  {ordersType === "received" && (
-                                    <Button
-                                      asChild
-                                      size='sm'
-                                      className='bg-charcoal text-white border-2 border-charcoal rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-brand transition-all shadow-[4px_4px_0px_0px_rgba(255,87,34,1)] hover:shadow-none'>
-                                      <Link href='/restaurant-dashboard'>
-                                        Manage status
-                                      </Link>
-                                    </Button>
-                                  )}
-                                  <Button
-                                    asChild
-                                    variant='outline'
-                                    size='sm'
-                                    className='border-2 border-charcoal rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-charcoal hover:text-white transition-all'>
-                                    <Link href={`/orders/${order.id}`}>
-                                      View Details
-                                    </Link>
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className='text-center py-20 space-y-6'>
-                          <div className='size-20 bg-cream border-4 border-charcoal border-dashed mx-auto flex items-center justify-center'>
-                            <Package className='size-8 text-charcoal/20' />
-                          </div>
-                          <div>
-                            <p className='text-xl font-black text-charcoal uppercase tracking-tighter'>
-                              {ordersType === "placed"
-                                ? "No orders yet"
-                                : "No received orders"}
-                            </p>
-                            <p className='text-sm font-bold text-gray-400 mt-2 uppercase tracking-widest'>
-                              {ordersType === "placed"
-                                ? "Hungry? Start exploring our menu!"
-                                : "Your kitchen is waiting for its first ticket."}
-                            </p>
-                          </div>
-                          {ordersType === "placed" && (
-                            <Button
-                              asChild
-                              className='bg-brand text-white font-black uppercase tracking-widest rounded-none border-2 border-charcoal hover:bg-white hover:text-brand transition-all shadow-[4px_4px_0px_0px_rgba(10,10,10,1)]'>
-                              <Link href='/meals'>Browse Meals</Link>
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                  <OrdersTab
+                    user={user}
+                    orders={orders}
+                    isOrdersLoading={isOrdersLoading}
+                    ordersType={ordersType}
+                    setOrdersType={setOrdersType}
+                    onReviewOrder={setReviewingOrder}
+                    onReviewMeal={(id, name) => {
+                      setRating(5);
+                      setComment("");
+                      setReviewingMeal({ mealId: id, mealName: name });
+                    }}
+                    onCancelOrder={setOrderToCancel}
+                    providerProfile={providerProfile}
+                    placedOrders={placedOrders}
+                    receivedOrders={receivedOrders}
+                  />
                 </TabsContent>
               </div>
             </Tabs>
@@ -966,356 +397,54 @@ function AccountPageContent() {
         </div>
       </main>
 
-      {/* --- Review Order Dialog (Pick Meal) --- */}
-      <Dialog
-        open={!!reviewingOrder}
-        onOpenChange={(open) => !open && setReviewingOrder(null)}>
-        <DialogContent className='bg-cream border-4 border-charcoal rounded-none p-0 max-w-md overflow-hidden shadow-[16px_16px_0px_0px_rgba(10,10,10,1)]'>
-          <DialogHeader className='bg-charcoal text-white p-8'>
-            <DialogTitle className='font-serif font-black text-3xl uppercase tracking-tighter italic'>
-              Review Your Feast
-            </DialogTitle>
-            <DialogDescription className='text-brand text-[10px] font-black uppercase tracking-[0.3em]'>
-              Select a dish to rate your experience
-            </DialogDescription>
-          </DialogHeader>
-          <div className='p-6 space-y-4 max-h-[60vh] overflow-y-auto'>
-            {reviewingOrder?.items.map((item) => (
-              <div
-                key={item.id}
-                className='flex items-center justify-between bg-white border-2 border-charcoal p-4 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_rgba(255,87,34,1)] transition-all'>
-                <div className='flex items-center gap-4'>
-                  <div className='size-12 bg-cream border-2 border-charcoal relative overflow-hidden'>
-                    {item.meal.imageUrl ? (
-                      <Image
-                        src={item.meal.imageUrl}
-                        alt={item.meal.name}
-                        fill
-                        className='object-cover'
-                      />
-                    ) : (
-                      <div className='size-full flex items-center justify-center opacity-10'>
-                        <Utensils className='size-6 text-charcoal' />
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <h4 className='font-black text-xs uppercase text-charcoal'>
-                      {item.meal.name}
-                    </h4>
-                    <p className='text-[8px] font-bold text-gray-400 uppercase italic'>
-                      Order ID: #{reviewingOrder.id.slice(-6)}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => {
-                    setRating(5);
-                    setComment("");
-                    setReviewingMeal({
-                      mealId: item.mealId,
-                      mealName: item.meal.name,
-                    });
-                  }}
-                  className='bg-charcoal text-white size-10 rounded-none border-2 border-charcoal hover:bg-brand transition-all flex items-center justify-center'>
-                  <ChevronRight className='size-5' />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Dialogs */}
+      <EditUserDialog
+        isOpen={isEditUserOpen}
+        onClose={() => setIsEditUserOpen(false)}
+        onUpdate={handleUpdateUser}
+        isUpdating={isUpdatingUser}
+        userForm={userForm}
+        setUserForm={setUserForm}
+      />
 
-      {/* --- Submit Review Dialog --- */}
-      <Dialog
-        open={!!reviewingMeal}
-        onOpenChange={(open) => !open && setReviewingMeal(null)}>
-        <DialogContent className='bg-cream border-4 border-charcoal rounded-none p-0 max-w-md overflow-hidden shadow-[16px_16px_0px_0px_rgba(10,10,10,1)]'>
-          <DialogHeader className='bg-brand text-white p-8'>
-            <DialogTitle className='font-serif font-black text-3xl uppercase tracking-tighter italic'>
-              How was the {reviewingMeal?.mealName}?
-            </DialogTitle>
-            <DialogDescription className='text-white/80 text-[10px] font-black uppercase tracking-[0.3em]'>
-              Your feedback fuels the kitchen
-            </DialogDescription>
-          </DialogHeader>
-          <div className='p-8 space-y-8'>
-            <div className='space-y-4'>
-              <p className='text-[10px] font-black uppercase tracking-widest text-charcoal/50 text-center'>
-                Select Your Rating
-              </p>
-              <div className='flex flex-col items-center gap-6'>
-                <div className='flex justify-center items-center gap-3'>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type='button'
-                      onMouseEnter={() => setRating(star)}
-                      onClick={() => setRating(star)}
-                      className={`group size-14 transition-all duration-300 transform ${
-                        rating >= star
-                          ? "scale-110"
-                          : "scale-100 opacity-40 hover:opacity-100"
-                      }`}>
-                      <Star
-                        className={`size-full transition-all duration-300 ${
-                          rating >= star
-                            ? "fill-brand stroke-charcoal stroke-[3px] drop-shadow-[0_4px_0_rgba(10,10,10,1)]"
-                            : "fill-white/20 stroke-charcoal stroke-[2px]"
-                        }`}
-                      />
-                    </button>
-                  ))}
-                </div>
-                <div className='w-full h-1 bg-charcoal/5 rounded-full overflow-hidden'>
-                  <div
-                    className='h-full bg-yellow-400 transition-all duration-500 ease-out'
-                    style={{ width: `${(rating / 5) * 100}%` }}
-                  />
-                </div>
-              </div>
-            </div>
+      <EditStoreDialog
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+        onUpdate={handleUpdateProfile}
+        isUpdating={isUpdatingProfile}
+        editForm={editForm}
+        setEditForm={setEditForm}
+      />
 
-            <div className='space-y-4'>
-              <p className='text-[10px] font-black uppercase tracking-widest text-charcoal/50 flex items-center gap-2'>
-                <MessageSquare className='size-3' /> Leave a comment (Optional)
-              </p>
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder='TELL US WHAT YOU THOUGHT...'
-                className='w-full min-h-[120px] bg-white border-4 border-charcoal p-4 font-black uppercase text-xs placeholder:text-gray-200 focus:outline-none focus:ring-4 focus:ring-brand/20 resize-none'
-              />
-            </div>
+      <ReviewItemDialog
+        order={reviewingOrder}
+        onClose={() => setReviewingOrder(null)}
+        onSelectMeal={(id, name) => {
+          setReviewingOrder(null);
+          setRating(5);
+          setComment("");
+          setReviewingMeal({ mealId: id, mealName: name });
+        }}
+      />
 
-            <Button
-              disabled={isSubmittingReview}
-              onClick={submitReview}
-              className='w-full h-14 bg-charcoal text-white font-black uppercase tracking-widest rounded-none border-4 border-charcoal shadow-[6px_6px_0px_0px_rgba(255,87,34,1)] hover:shadow-none hover:bg-brand transition-all active:translate-x-1 active:translate-y-1'>
-              {isSubmittingReview ? (
-                <LoadingSpinner
-                  size='sm'
-                  text=''
-                  brutalist={false}
-                  className='p-0'
-                />
-              ) : (
-                "Dispatch Review"
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ReviewDialog
+        isOpen={!!reviewingMeal}
+        onClose={() => setReviewingMeal(null)}
+        onUpdate={submitReview}
+        isUpdating={isSubmittingReview}
+        reviewingMeal={reviewingMeal}
+        rating={rating}
+        setRating={setRating}
+        comment={comment}
+        setComment={setComment}
+      />
 
-      {/* Cancel Order Confirmation Dialog */}
-      <Dialog
-        open={!!orderToCancel}
-        onOpenChange={(open) => !open && setOrderToCancel(null)}>
-        <DialogContent className='bg-cream border-4 border-charcoal rounded-none p-0 max-w-md overflow-hidden shadow-[16px_16px_0px_0px_rgba(10,10,10,1)]'>
-          <DialogHeader className='bg-red-500 text-white p-8'>
-            <div className='flex items-center gap-4'>
-              <div className='size-14 bg-white border-4 border-white flex items-center justify-center rotate-3'>
-                <AlertCircle className='size-8 text-red-500' />
-              </div>
-              <div>
-                <DialogTitle className='font-serif font-black text-2xl uppercase tracking-tighter italic'>
-                  Cancel Order?
-                </DialogTitle>
-                <DialogDescription className='text-white/80 text-[10px] font-black uppercase tracking-[0.2em] mt-1'>
-                  This action cannot be undone
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          <div className='p-8 space-y-6'>
-            <p className='text-sm font-bold text-charcoal/70'>
-              Are you sure you want to cancel this order? Your order will be
-              voided and you will need to place a new order if you change your
-              mind.
-            </p>
-            <DialogFooter className='flex gap-4 sm:gap-4'>
-              <Button
-                variant='outline'
-                onClick={() => setOrderToCancel(null)}
-                className='flex-1 h-12 rounded-none border-2 border-charcoal font-black uppercase tracking-widest text-xs hover:bg-charcoal hover:text-white transition-all'>
-                Keep Order
-              </Button>
-              <Button
-                onClick={confirmCancelOrder}
-                disabled={cancellingOrderId !== null}
-                className='flex-1 h-12 bg-red-500 text-white rounded-none border-2 border-red-500 font-black uppercase tracking-widest text-xs hover:bg-red-600 transition-all'>
-                {cancellingOrderId ? (
-                  <>
-                    <LoadingSpinner
-                      size='sm'
-                      text=''
-                      brutalist={false}
-                      className='p-0 mr-2'
-                    />
-                    Voiding...
-                  </>
-                ) : (
-                  "Yes, Cancel"
-                )}
-              </Button>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* --- Edit Store Info Dialog --- */}
-      <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
-        <DialogContent className='bg-cream border-4 border-charcoal rounded-none p-0 max-w-lg overflow-hidden shadow-[16px_16px_0px_0px_rgba(10,10,10,1)]'>
-          <DialogHeader className='bg-charcoal text-white p-8'>
-            <DialogTitle className='font-serif font-black text-3xl uppercase tracking-tighter italic'>
-              Edit Store Profile
-            </DialogTitle>
-            <DialogDescription className='text-brand text-[10px] font-black uppercase tracking-[0.3em]'>
-              Update your business identity
-            </DialogDescription>
-          </DialogHeader>
-          <div className='p-8 space-y-6'>
-            <div className='space-y-4'>
-              <div className='space-y-2'>
-                <Label className='text-[10px] font-black uppercase tracking-widest text-charcoal'>
-                  Restaurant Name
-                </Label>
-                <Input
-                  value={editForm.restaurantName}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, restaurantName: e.target.value })
-                  }
-                  className='h-12 border-2 border-charcoal rounded-none font-bold focus-visible:ring-brand'
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label className='text-[10px] font-black uppercase tracking-widest text-charcoal'>
-                  Cuisine Type
-                </Label>
-                <Input
-                  value={editForm.cuisineType}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, cuisineType: e.target.value })
-                  }
-                  className='h-12 border-2 border-charcoal rounded-none font-bold focus-visible:ring-brand'
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label className='text-[10px] font-black uppercase tracking-widest text-charcoal'>
-                  Address
-                </Label>
-                <Input
-                  value={editForm.address}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, address: e.target.value })
-                  }
-                  className='h-12 border-2 border-charcoal rounded-none font-bold focus-visible:ring-brand'
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label className='text-[10px] font-black uppercase tracking-widest text-charcoal'>
-                  Cover Image URL
-                </Label>
-                <Input
-                  value={editForm.coverImageUrl}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, coverImageUrl: e.target.value })
-                  }
-                  className='h-12 border-2 border-charcoal rounded-none font-bold focus-visible:ring-brand'
-                  placeholder='https://...'
-                />
-              </div>
-            </div>
-
-            <DialogFooter className='pt-4 gap-4'>
-              <Button
-                variant='outline'
-                onClick={() => setIsEditProfileOpen(false)}
-                className='flex-1 h-12 rounded-none border-2 border-charcoal font-black uppercase tracking-widest text-xs hover:bg-charcoal hover:text-white transition-all'>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleUpdateProfile}
-                disabled={isUpdatingProfile}
-                className='flex-1 h-12 bg-brand text-white rounded-none border-2 border-charcoal font-black uppercase tracking-widest text-xs hover:bg-white hover:text-brand transition-all shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] hover:shadow-none'>
-                {isUpdatingProfile ? "Saving..." : "Save Changes"}
-              </Button>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
-      {/* --- Edit User Profile Dialog --- */}
-      <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
-        <DialogContent className='max-w-md bg-white border-4 border-charcoal rounded-none shadow-[12px_12px_0px_0px_rgba(10,10,10,1)]'>
-          <DialogHeader>
-            <DialogTitle className='text-3xl font-serif font-black text-charcoal italic'>
-              Edit Profile
-            </DialogTitle>
-            <DialogDescription className='text-[10px] font-black uppercase tracking-widest text-brand'>
-              Update your personal information
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className='space-y-6 py-4'>
-            <div className='space-y-2'>
-              <Label className='text-[10px] font-black uppercase tracking-widest text-charcoal text-left block'>
-                Full Name
-              </Label>
-              <Input
-                value={userForm.name}
-                onChange={(e) =>
-                  setUserForm({ ...userForm, name: e.target.value })
-                }
-                className='h-12 border-2 border-charcoal rounded-none font-bold'
-                placeholder='John Doe'
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label className='text-[10px] font-black uppercase tracking-widest text-charcoal text-left block'>
-                Profile Image URL
-              </Label>
-              <Input
-                value={userForm.image}
-                onChange={(e) =>
-                  setUserForm({ ...userForm, image: e.target.value })
-                }
-                className='h-12 border-2 border-charcoal rounded-none font-bold'
-                placeholder='https://...'
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label className='text-[10px] font-black uppercase tracking-widest text-charcoal text-left block'>
-                Delivery Address
-              </Label>
-              <Input
-                value={userForm.address}
-                onChange={(e) =>
-                  setUserForm({ ...userForm, address: e.target.value })
-                }
-                className='h-12 border-2 border-charcoal rounded-none font-bold'
-                placeholder='123 Gourmet St.'
-              />
-            </div>
-          </div>
-
-          <DialogFooter className='gap-3'>
-            <Button
-              variant='outline'
-              onClick={() => setIsEditUserOpen(false)}
-              className='h-12 border-2 border-charcoal rounded-none font-black uppercase tracking-widest text-[10px] flex-1'>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleUpdateUser}
-              disabled={isUpdatingUser}
-              className='h-12 bg-brand text-white border-2 border-charcoal rounded-none font-black uppercase tracking-widest text-[10px] flex-1 shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] hover:shadow-none transition-all'>
-              {isUpdatingUser ? "Updating..." : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CancelOrderDialog
+        isOpen={!!orderToCancel}
+        onClose={() => setOrderToCancel(null)}
+        onConfirm={confirmCancelOrder}
+        isCancelling={isCancellingOrder}
+      />
     </div>
   );
 }
@@ -1325,7 +454,11 @@ export default function AccountPage() {
     <Suspense
       fallback={
         <div className='min-h-screen bg-cream'>
-          <LoadingSpinner size='xl' className='h-screen' />
+          <LoadingSpinner
+            text='Loading Account...'
+            size='xl'
+            className='h-screen'
+          />
         </div>
       }>
       <AccountPageContent />
