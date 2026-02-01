@@ -883,7 +883,9 @@ function AccountPageContent() {
                                 </div>
                                 <div className='flex flex-col items-end gap-2'>
                                   {ordersType === "placed" &&
-                                    order.status === "delivered" && (
+                                    order.status === "delivered" &&
+                                    (order.customerId === user.id ||
+                                      order.customer?.email === user.email) && (
                                       <Button
                                         onClick={() => setReviewingOrder(order)}
                                         size='sm'
@@ -1007,12 +1009,14 @@ function AccountPageContent() {
                   </div>
                 </div>
                 <Button
-                  onClick={() =>
+                  onClick={() => {
+                    setRating(5);
+                    setComment("");
                     setReviewingMeal({
                       mealId: item.mealId,
                       mealName: item.meal.name,
-                    })
-                  }
+                    });
+                  }}
                   className='bg-charcoal text-white size-10 rounded-none border-2 border-charcoal hover:bg-brand transition-all flex items-center justify-center'>
                   <ChevronRight className='size-5' />
                 </Button>
@@ -1040,17 +1044,35 @@ function AccountPageContent() {
               <p className='text-[10px] font-black uppercase tracking-widest text-charcoal/50 text-center'>
                 Select Your Rating
               </p>
-              <div className='flex justify-center gap-2'>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    onClick={() => setRating(star)}
-                    className={`size-12 border-4 border-charcoal flex items-center justify-center transition-all ${rating >= star ? "bg-brand text-white" : "bg-white text-gray-200"}`}>
-                    <Star
-                      className={`size-6 ${rating >= star ? "fill-white" : "fill-transparent"}`}
-                    />
-                  </button>
-                ))}
+              <div className='flex flex-col items-center gap-6'>
+                <div className='flex justify-center items-center gap-3'>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type='button'
+                      onMouseEnter={() => setRating(star)}
+                      onClick={() => setRating(star)}
+                      className={`group size-14 transition-all duration-300 transform ${
+                        rating >= star
+                          ? "scale-110"
+                          : "scale-100 opacity-40 hover:opacity-100"
+                      }`}>
+                      <Star
+                        className={`size-full transition-all duration-300 ${
+                          rating >= star
+                            ? "fill-brand stroke-charcoal stroke-[3px] drop-shadow-[0_4px_0_rgba(10,10,10,1)]"
+                            : "fill-white/20 stroke-charcoal stroke-[2px]"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                <div className='w-full h-1 bg-charcoal/5 rounded-full overflow-hidden'>
+                  <div
+                    className='h-full bg-yellow-400 transition-all duration-500 ease-out'
+                    style={{ width: `${(rating / 5) * 100}%` }}
+                  />
+                </div>
               </div>
             </div>
 
