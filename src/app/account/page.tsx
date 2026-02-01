@@ -109,7 +109,7 @@ function AccountPageContent() {
     useState<ProviderProfile | null>(null);
   const [isProviderLoading, setIsProviderLoading] = useState(false);
 
-  // Edit Profile States
+  // Edit Profile States (Provider)
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -117,6 +117,15 @@ function AccountPageContent() {
     cuisineType: "",
     address: "",
     coverImageUrl: "",
+  });
+
+  // Edit User Profile States (Global)
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+  const [isUpdatingUser, setIsUpdatingUser] = useState(false);
+  const [userForm, setUserForm] = useState({
+    name: "",
+    image: "",
+    address: "",
   });
 
   // Review states
@@ -254,6 +263,38 @@ function AccountPageContent() {
         coverImageUrl: providerProfile.coverImageUrl || "",
       });
       setIsEditProfileOpen(true);
+    }
+  };
+
+  const openEditUserDialog = () => {
+    setUserForm({
+      name: user.name || "",
+      image: user.image || "",
+      address: user.address || "",
+    });
+    setIsEditUserOpen(true);
+  };
+
+  const handleUpdateUser = async () => {
+    setIsUpdatingUser(true);
+    try {
+      const { error } = await authClient.updateUser({
+        name: userForm.name,
+        image: userForm.image,
+        // @ts-expect-error - address is a custom field
+        address: userForm.address,
+      });
+
+      if (error) {
+        toast.error(error.message || "Failed to update profile.");
+      } else {
+        toast.success("Profile updated successfully!");
+        setIsEditUserOpen(false);
+      }
+    } catch {
+      toast.error("Connection error. Please try again.");
+    } finally {
+      setIsUpdatingUser(false);
     }
   };
 
@@ -432,13 +473,22 @@ function AccountPageContent() {
                 <TabsContent value='profile' className='space-y-8'>
                   <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
                     <Card className='rounded-none border-4 border-charcoal bg-white shadow-[8px_8px_0px_0px_rgba(255,87,34,1)]'>
-                      <CardHeader>
-                        <CardTitle className='font-serif font-black text-2xl uppercase tracking-tighter text-charcoal'>
-                          Account Overview
-                        </CardTitle>
-                        <CardDescription className='text-[10px] font-black uppercase tracking-[0.2em] text-brand'>
-                          Verified Profile Details
-                        </CardDescription>
+                      <CardHeader className='flex flex-row items-start justify-between space-y-0'>
+                        <div>
+                          <CardTitle className='font-serif font-black text-2xl uppercase tracking-tighter text-charcoal'>
+                            Account Overview
+                          </CardTitle>
+                          <CardDescription className='text-[10px] font-black uppercase tracking-[0.2em] text-brand'>
+                            Verified Profile Details
+                          </CardDescription>
+                        </div>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={openEditUserDialog}
+                          className='border-2 border-charcoal rounded-none text-[8px] font-black uppercase tracking-widest hover:bg-charcoal hover:text-white transition-all shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] hover:shadow-none'>
+                          Edit Profile
+                        </Button>
                       </CardHeader>
                       <CardContent className='grid grid-cols-1 gap-8'>
                         <div className='space-y-4'>
@@ -456,6 +506,14 @@ function AccountPageContent() {
                             </p>
                             <p className='font-bold text-charcoal'>
                               {user.email}
+                            </p>
+                          </div>
+                          <div className='space-y-1'>
+                            <p className='text-[10px] font-black uppercase text-gray-400'>
+                              Primary Address
+                            </p>
+                            <p className='font-bold text-charcoal'>
+                              {user.address || "No address added yet"}
                             </p>
                           </div>
                         </div>
@@ -1052,6 +1110,78 @@ function AccountPageContent() {
               </Button>
             </DialogFooter>
           </div>
+        </DialogContent>
+      </Dialog>
+      {/* --- Edit User Profile Dialog --- */}
+      <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
+        <DialogContent className='max-w-md bg-white border-4 border-charcoal rounded-none shadow-[12px_12px_0px_0px_rgba(10,10,10,1)]'>
+          <DialogHeader>
+            <DialogTitle className='text-3xl font-serif font-black text-charcoal italic'>
+              Edit Profile
+            </DialogTitle>
+            <DialogDescription className='text-[10px] font-black uppercase tracking-widest text-brand'>
+              Update your personal information
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className='space-y-6 py-4'>
+            <div className='space-y-2'>
+              <Label className='text-[10px] font-black uppercase tracking-widest text-charcoal text-left block'>
+                Full Name
+              </Label>
+              <Input
+                value={userForm.name}
+                onChange={(e) =>
+                  setUserForm({ ...userForm, name: e.target.value })
+                }
+                className='h-12 border-2 border-charcoal rounded-none font-bold'
+                placeholder='John Doe'
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label className='text-[10px] font-black uppercase tracking-widest text-charcoal text-left block'>
+                Profile Image URL
+              </Label>
+              <Input
+                value={userForm.image}
+                onChange={(e) =>
+                  setUserForm({ ...userForm, image: e.target.value })
+                }
+                className='h-12 border-2 border-charcoal rounded-none font-bold'
+                placeholder='https://...'
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <Label className='text-[10px] font-black uppercase tracking-widest text-charcoal text-left block'>
+                Delivery Address
+              </Label>
+              <Input
+                value={userForm.address}
+                onChange={(e) =>
+                  setUserForm({ ...userForm, address: e.target.value })
+                }
+                className='h-12 border-2 border-charcoal rounded-none font-bold'
+                placeholder='123 Gourmet St.'
+              />
+            </div>
+          </div>
+
+          <DialogFooter className='gap-3'>
+            <Button
+              variant='outline'
+              onClick={() => setIsEditUserOpen(false)}
+              className='h-12 border-2 border-charcoal rounded-none font-black uppercase tracking-widest text-[10px] flex-1'>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateUser}
+              disabled={isUpdatingUser}
+              className='h-12 bg-brand text-white border-2 border-charcoal rounded-none font-black uppercase tracking-widest text-[10px] flex-1 shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] hover:shadow-none transition-all'>
+              {isUpdatingUser ? "Updating..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
