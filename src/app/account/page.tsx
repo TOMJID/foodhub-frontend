@@ -155,21 +155,6 @@ function AccountPageContent() {
   // Orders sub-tab state (for providers)
   const [ordersType, setOrdersType] = useState<"placed" | "received">("placed");
 
-  // Filtered orders
-  const placedOrders = orders.filter(
-    (o) =>
-      o.customerId === user.id ||
-      o.customer?.email === user.email ||
-      // If none of these match and it's not clearly a received order, assume placed
-      (user.role !== "provider" ? true : o.providerId !== providerProfile?.id),
-  );
-
-  const receivedOrders = orders.filter(
-    (o) =>
-      o.providerId === providerProfile?.id ||
-      o.provider?.restaurantName === providerProfile?.restaurantName,
-  );
-
   // Cancel order state
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(
     null,
@@ -280,6 +265,21 @@ function AccountPageContent() {
   if (!session) return null;
 
   const user = session.user as UserWithExtras;
+
+  // Filtered orders
+  const placedOrders = orders.filter(
+    (o) =>
+      o.customerId === user.id ||
+      o.customer?.email === user.email ||
+      // If none of these match and it's not clearly a received order, assume placed
+      (user.role !== "provider" ? true : o.providerId !== providerProfile?.id),
+  );
+
+  const receivedOrders = orders.filter(
+    (o) =>
+      o.providerId === providerProfile?.id ||
+      o.provider?.restaurantName === providerProfile?.restaurantName,
+  );
 
   const handleLogout = async () => {
     await authClient.signOut();
