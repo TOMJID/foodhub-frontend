@@ -52,6 +52,7 @@ export function Categories() {
                   src={category.img}
                   alt={category.name}
                   fill
+                  sizes='(max-width: 768px) 100vw, 33vw'
                   className='object-cover grayscale hover:grayscale-0 transition-all duration-700 scale-110 group-hover:scale-100'
                 />
                 <div className='absolute inset-0 bg-linear-to-t from-charcoal via-transparent to-transparent opacity-60'></div>

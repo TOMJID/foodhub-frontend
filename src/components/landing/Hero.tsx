@@ -46,6 +46,7 @@ export function Hero() {
               src='/images/hero.png'
               alt='High-end food bowl'
               fill
+              sizes='(max-width: 1024px) 100vw, 40vw'
               className='object-cover group-hover:scale-105 transition-transform duration-700'
               priority
             />

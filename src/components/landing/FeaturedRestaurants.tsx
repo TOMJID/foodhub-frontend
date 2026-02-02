@@ -76,6 +76,7 @@ export function FeaturedRestaurants() {
                   src={provider.img}
                   alt={provider.name}
                   fill
+                  sizes='(max-width: 1024px) 100vw, 50vw'
                   className='object-cover group-hover:scale-110 transition-transform duration-700'
                 />
                 {/* Overlay Badge */}

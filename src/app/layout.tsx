@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     description:
       "The better way to order food. Discover top kitchens and handcrafted meals near you.",
     images: ["/website-banner.png"],
-    creator: "@foodhub",
+    creator: "@tomjid",
   },
   robots: {
     index: true,
@@ -71,6 +71,11 @@ export const metadata: Metadata = {
       "max-image-preview": "large",
       "max-snippet": -1,
     },
+  },
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
   },
 };
 

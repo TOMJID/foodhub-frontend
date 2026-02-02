@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { User, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -28,9 +29,28 @@ export function Navbar() {
   return (
     <header className='fixed top-0 left-0 right-0 z-50 px-6 py-4'>
       <div className='max-w-7xl mx-auto flex items-center justify-between bg-white/80 backdrop-blur-md border-[3px] border-charcoal px-6 py-3 shadow-[8px_8px_0px_0px_rgba(10,10,10,1)]'>
-        <Link href='/' className='flex items-center gap-2'>
+        <Link
+          href='/'
+          onClick={(e) => {
+            if (window.location.pathname === "/") {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          }}
+          className='flex items-center gap-4 group'>
+          <div className='relative border-[3px] border-charcoal p-1.5 transition-all duration-300 group-hover:rotate-6 group-hover:-translate-y-1 shadow-[4px_4px_0px_0px_rgba(10,10,10,1)]'>
+            <Image
+              src='/logo.png'
+              alt='FoodHub'
+              width={32}
+              height={32}
+              className='object-contain invert-0 transition-transform'
+              style={{ height: "auto" }}
+              priority
+            />
+          </div>
           <span className='text-2xl font-serif font-black tracking-tighter text-charcoal'>
-            FOOD<span className='text-brand'>HUB</span>
+            F00D<span className='text-brand'>HUB</span>
           </span>
         </Link>
 
@@ -102,8 +122,19 @@ export function Navbar() {
               side='right'
               className='bg-cream border-l-4 border-charcoal p-0'>
               <SheetHeader className='p-6 border-b-2 border-charcoal'>
-                <SheetTitle className='text-2xl font-serif font-black tracking-tighter text-charcoal'>
-                  FOOD<span className='text-brand'>HUB</span>
+                <SheetTitle className='flex items-center gap-4 text-2xl font-serif font-black tracking-tighter text-charcoal text-left'>
+                  <div className='bg-brand border-[3px] border-charcoal p-1 shadow-[3px_3px_0px_0px_rgba(10,10,10,1)]'>
+                    <Image
+                      src='/logo.png'
+                      alt='FoodHub'
+                      width={28}
+                      height={28}
+                      className='object-contain'
+                    />
+                  </div>
+                  <span>
+                    FOOD<span className='text-brand'>HUB</span>
+                  </span>
                 </SheetTitle>
               </SheetHeader>
               <div className='flex flex-col p-6 gap-6'>
