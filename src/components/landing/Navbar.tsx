@@ -40,7 +40,7 @@ export function Navbar() {
               <NavigationMenuLink
                 asChild
                 className={navigationMenuTriggerStyle()}>
-                <Link href='/meals'>Browse Meals</Link>
+                <Link href='/meals'>Meals</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
@@ -68,7 +68,7 @@ export function Navbar() {
 
         <div className='flex items-center gap-4'>
           {isPending ? (
-            <div className='hidden md:flex items-center gap-2 bg-charcoal/5 px-2 py-1 border-[3px] border-charcoal/10 scale-90 translate-y-[-2px]'>
+            <div className='hidden md:flex items-center gap-2 bg-charcoal/5 px-2 py-1 border-[3px] border-charcoal/10 scale-90 -translate-y-0.5'>
               <LoadingSpinner
                 size='sm'
                 text=''
