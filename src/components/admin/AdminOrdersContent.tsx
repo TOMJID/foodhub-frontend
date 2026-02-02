@@ -62,6 +62,7 @@ export function AdminOrdersContent() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("ALL");
 
   const fetchOrders = async () => {
     try {
@@ -84,16 +85,22 @@ export function AdminOrdersContent() {
     fetchOrders();
   }, []);
 
-  const filteredOrders = orders.filter(
-    (order) =>
-      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (order.customer?.name?.toLowerCase() || "").includes(
-        searchQuery.toLowerCase(),
-      ) ||
-      (order.provider?.restaurantName?.toLowerCase() || "").includes(
-        searchQuery.toLowerCase(),
-      ),
-  );
+  const filteredOrders = orders
+    .filter(
+      (order) =>
+        order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (order.customer?.name?.toLowerCase() || "").includes(
+          searchQuery.toLowerCase(),
+        ) ||
+        (order.provider?.restaurantName?.toLowerCase() || "").includes(
+          searchQuery.toLowerCase(),
+        ),
+    )
+    .filter((order) =>
+      filterStatus === "ALL"
+        ? true
+        : order.status.toLowerCase() === filterStatus.toLowerCase(),
+    );
 
   return (
     <div className='space-y-12'>
@@ -119,13 +126,32 @@ export function AdminOrdersContent() {
         </div>
       </div>
 
+      {/* --- Filter Tabs --- */}
+      <div className='flex flex-wrap gap-2'>
+        {["ALL", "PLACED", "PREPARING", "READY", "DELIVERED", "CANCELLED"].map(
+          (status) => (
+            <Button
+              key={status}
+              onClick={() => setFilterStatus(status)}
+              variant='outline'
+              className={`rounded-none border-2 border-charcoal font-black uppercase tracking-widest text-[9px] h-10 px-6 transition-all shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] hover:shadow-none active:translate-x-1 active:translate-y-1 ${
+                filterStatus === status
+                  ? "bg-charcoal text-white"
+                  : "bg-white text-charcoal hover:bg-brand hover:text-white"
+              }`}>
+              {status}
+            </Button>
+          ),
+        )}
+      </div>
+
       {isLoading ? (
         <div className='py-40'>
           <LoadingSpinner text='Syncing with the kitchen...' size='lg' />
         </div>
       ) : (
-        <div className='bg-white border-4 border-charcoal shadow-[12px_12px_0px_0px_rgba(10,10,10,1)]'>
-          <Table>
+        <div className='bg-white border-4 border-charcoal shadow-[12px_12px_0px_0px_rgba(10,10,10,1)] overflow-x-auto'>
+          <Table className='min-w-[800px]'>
             <TableHeader className='bg-charcoal text-white font-black'>
               <TableRow className='hover:bg-charcoal border-none'>
                 <TableHead className='text-white uppercase tracking-widest text-[8px] h-14'>

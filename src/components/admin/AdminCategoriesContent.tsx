@@ -28,6 +28,7 @@ export function AdminCategoriesContent() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
@@ -106,6 +107,15 @@ export function AdminCategoriesContent() {
     }
   };
 
+  const filteredCategories = categories.filter((cat) =>
+    cat.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  const totalMeals = categories.reduce(
+    (acc, cat) => acc + (cat._count?.meals || 0),
+    0,
+  );
+
   return (
     <div className='space-y-16 pb-20'>
       <div className='space-y-2'>
@@ -175,20 +185,6 @@ export function AdminCategoriesContent() {
               </form>
             </CardContent>
           </Card>
-
-          <div className='bg-brand/10 border-4 border-brand border-dashed p-8 space-y-4'>
-            <div className='flex items-center gap-3'>
-              <AlertCircle className='size-5 text-brand' />
-              <h4 className='font-black text-xs uppercase text-brand tracking-widest'>
-                Forge Guidelines
-              </h4>
-            </div>
-            <p className='text-[10px] font-bold text-brand leading-relaxed uppercase tracking-widest'>
-              Categories define how customers filter their cravings. Use clear,
-              broad terms that multiple providers can fit into. High-quality
-              imagery significantly boosts click-through rates.
-            </p>
-          </div>
         </div>
 
         {/* --- List Section --- */}
@@ -201,14 +197,32 @@ export function AdminCategoriesContent() {
                   Active Tiers
                 </h3>
               </div>
+              <div className='flex items-center gap-4'>
+                <div className='hidden md:block text-right'>
+                  <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest'>
+                    Total Ecosystem
+                  </p>
+                  <p className='text-[10px] font-black text-charcoal uppercase'>
+                    {totalMeals} DISHES
+                  </p>
+                </div>
+                <div className='relative w-48'>
+                  <Input
+                    placeholder='SEARCH TIERS...'
+                    className='h-10 border-2 border-charcoal bg-cream rounded-none font-black uppercase text-[8px] placeholder:text-gray-300 focus-visible:ring-brand focus-visible:ring-offset-0 focus-visible:ring-2'
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
             <div className='p-0 divide-y-4 divide-charcoal/5 max-h-[700px] overflow-y-auto px-1'>
               {isLoading ? (
                 <div className='py-20'>
                   <LoadingSpinner text='Scanning Catalog...' size='md' />
                 </div>
-              ) : categories.length > 0 ? (
-                categories.map((cat) => (
+              ) : filteredCategories.length > 0 ? (
+                filteredCategories.map((cat) => (
                   <div
                     key={cat.id}
                     className='p-6 flex items-center justify-between group hover:bg-cream/50 transition-colors'>

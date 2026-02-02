@@ -40,6 +40,7 @@ export function AdminUsersContent() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("ALL");
   const [isActionLoading, setIsActionLoading] = useState<string | null>(null);
 
   const fetchUsers = async () => {
@@ -86,14 +87,27 @@ export function AdminUsersContent() {
     }
   };
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.providerProfile?.restaurantName
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()),
-  );
+  const filteredUsers = users
+    .filter((user) => {
+      const name = user.name?.toLowerCase() || "";
+      const email = user.email?.toLowerCase() || "";
+      const restaurant =
+        user.providerProfile?.restaurantName?.toLowerCase() || "";
+      const query = searchQuery.toLowerCase();
+
+      return (
+        name.includes(query) ||
+        email.includes(query) ||
+        restaurant.includes(query)
+      );
+    })
+    .filter((user) => {
+      const role = user.role.toLowerCase();
+      if (roleFilter === "ALL") return true;
+      if (roleFilter === "CUSTOMER")
+        return role === "user" || role === "customer";
+      return role === roleFilter.toLowerCase();
+    });
 
   return (
     <div className='space-y-12'>
@@ -119,13 +133,36 @@ export function AdminUsersContent() {
         </div>
       </div>
 
+      {/* --- Filter Tabs --- */}
+      <div className='flex flex-col md:flex-row md:items-center justify-between gap-6'>
+        <div className='flex flex-wrap gap-2'>
+          {["ALL", "ADMIN", "PROVIDER", "CUSTOMER"].map((role) => (
+            <Button
+              key={role}
+              onClick={() => setRoleFilter(role)}
+              variant='outline'
+              className={`rounded-none border-2 border-charcoal font-black uppercase tracking-widest text-[9px] h-10 px-6 transition-all shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] hover:shadow-none active:translate-x-1 active:translate-y-1 ${
+                roleFilter === role
+                  ? "bg-charcoal text-white"
+                  : "bg-white text-charcoal hover:bg-brand hover:text-white"
+              }`}>
+              {role}
+            </Button>
+          ))}
+        </div>
+
+        <div className='text-[10px] font-black uppercase tracking-widest text-charcoal/40 bg-white border-2 border-charcoal px-4 py-2 shadow-[4px_4px_0px_0px_rgba(10,10,10,1)]'>
+          {filteredUsers.length} Customers Found
+        </div>
+      </div>
+
       {isLoading ? (
         <div className='py-40'>
           <LoadingSpinner text='Consulting the archives...' size='lg' />
         </div>
       ) : (
-        <div className='bg-white border-4 border-charcoal shadow-[12px_12px_0px_0px_rgba(10,10,10,1)]'>
-          <Table>
+        <div className='bg-white border-4 border-charcoal shadow-[12px_12px_0px_0px_rgba(10,10,10,1)] overflow-x-auto'>
+          <Table className='min-w-[800px]'>
             <TableHeader className='bg-charcoal'>
               <TableRow className='hover:bg-charcoal border-none'>
                 <TableHead className='text-white font-black uppercase tracking-widest text-[10px] h-14'>

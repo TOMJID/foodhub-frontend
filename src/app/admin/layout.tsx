@@ -12,9 +12,17 @@ import {
   LogOut,
   ShieldCheck,
   ChevronRight,
+  Menu,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 export default function AdminLayout({
   children,
@@ -54,7 +62,7 @@ export default function AdminLayout({
 
   const navItems = [
     { name: "Stats Overview", href: "/admin", icon: LayoutDashboard },
-    { name: "User Management", href: "/admin/users", icon: Users },
+    { name: "Customer Management", href: "/admin/users", icon: Users },
     { name: "Global Orders", href: "/admin/orders", icon: ShoppingBag },
     { name: "Menu Categories", href: "/admin/categories", icon: Tags },
   ];
@@ -120,12 +128,73 @@ export default function AdminLayout({
       {/* --- Main Content --- */}
       <main className='flex-1 lg:ml-80'>
         <header className='h-20 bg-white border-b-4 border-charcoal flex items-center justify-between px-8 sticky top-0 z-40 lg:hidden'>
-          <Link
-            href='/'
-            className='text-2xl font-serif font-black italic tracking-tighter'>
-            ADMIN<span className='text-brand'>.HUB</span>
-          </Link>
-          <div className='flex items-center gap-4 italic font-black text-[10px] uppercase'>
+          <div className='flex items-center gap-4'>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant='ghost' size='icon' className='-ml-2'>
+                  <Menu className='size-6' />
+                </Button>
+              </SheetTrigger>
+              <SheetContent
+                side='left'
+                className='w-80 bg-white border-r-4 border-charcoal p-0'>
+                <SheetHeader className='p-8 border-b-4 border-charcoal'>
+                  <SheetTitle className='flex items-center gap-3'>
+                    <div className='size-8 bg-brand border-2 border-charcoal rotate-3 flex items-center justify-center'>
+                      <ShieldCheck className='size-5 text-white' />
+                    </div>
+                    <span className='font-serif font-black text-2xl tracking-tighter text-charcoal'>
+                      ADMIN<span className='text-brand'>.HUB</span>
+                    </span>
+                  </SheetTitle>
+                </SheetHeader>
+                <div className='p-8 space-y-8'>
+                  <nav className='space-y-4'>
+                    {navItems.map((item) => {
+                      const isActive = pathname === item.href;
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={`flex items-center justify-between p-4 border-4 transition-all group ${
+                            isActive
+                              ? "bg-charcoal border-charcoal text-white shadow-[6px_6px_0px_0px_rgba(255,87,34,1)]"
+                              : "bg-white border-charcoal text-charcoal shadow-[4px_4px_0px_0px_rgba(10,10,10,1)]"
+                          }`}>
+                          <div className='flex items-center gap-4'>
+                            <Icon
+                              className={`size-5 ${isActive ? "text-brand" : "text-charcoal"}`}
+                            />
+                            <span className='text-[10px] font-black uppercase tracking-widest'>
+                              {item.name}
+                            </span>
+                          </div>
+                          <ChevronRight className='size-4' />
+                        </Link>
+                      );
+                    })}
+                  </nav>
+                  <Button
+                    onClick={() =>
+                      authClient.signOut({
+                        fetchOptions: { onSuccess: () => router.push("/") },
+                      })
+                    }
+                    className='w-full h-14 bg-white text-charcoal border-4 border-charcoal rounded-none font-black uppercase tracking-widest text-xs hover:bg-red-500 hover:text-white transition-all shadow-[6px_6px_0px_0px_rgba(10,10,10,1)]'>
+                    <LogOut className='size-4 mr-3' />
+                    Exit Portal
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+            <Link
+              href='/'
+              className='text-2xl font-serif font-black italic tracking-tighter'>
+              ADMIN<span className='text-brand'>.HUB</span>
+            </Link>
+          </div>
+          <div className='flex items-center gap-4 italic font-black text-[10px] uppercase text-charcoal/40'>
             {navItems.find((i) => i.href === pathname)?.name}
           </div>
         </header>
