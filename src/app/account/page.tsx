@@ -104,7 +104,7 @@ function AccountPageContent() {
       console.error("Cancel order error:", error);
       toast.error("Failed to cancel order");
     } finally {
-      setIsCancellingOrder(null);
+      setIsCancellingOrder(false);
     }
   };
 
