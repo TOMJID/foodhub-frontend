@@ -46,7 +46,7 @@ export const metadata: Metadata = {
       "The better way to order food. Discover top kitchens and handcrafted meals near you.",
     images: [
       {
-        url: "/og-image.png",
+        url: "/website-banner.png",
         width: 1200,
         height: 630,
         alt: "FoodHub - Premium Food Delivery",
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     title: "FoodHub | Premium Food Delivery Experience",
     description:
       "The better way to order food. Discover top kitchens and handcrafted meals near you.",
-    images: ["/og-image.png"],
+    images: ["/website-banner.png"],
     creator: "@foodhub",
   },
   robots: {
