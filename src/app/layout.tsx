@@ -17,9 +17,61 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "FoodHub | Discover & Order Delicious Meals",
+  title: {
+    default: "FoodHub | Premium Food Delivery Experience",
+    template: "%s | FoodHub",
+  },
   description:
-    "The premium food delivery experience. Browse menus, order from top providers, and track your meals in real-time.",
+    "Order delicious meals from top-rated restaurants and local kitchens. Fast delivery, premium service, and handcrafted culinary experiences.",
+  keywords: [
+    "food delivery",
+    "restaurants",
+    "order food",
+    "meals",
+    "culinary",
+    "foodhub",
+    "local kitchens",
+  ],
+  authors: [{ name: "Tomjid" }],
+  creator: "Tomjid",
+  publisher: "Tomjid",
+  metadataBase: new URL("https://foodhub-by-tomjid.vercel.app/"),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://foodhub-by-tomjid.vercel.app/",
+    siteName: "FoodHub",
+    title: "FoodHub | Premium Food Delivery Experience",
+    description:
+      "The better way to order food. Discover top kitchens and handcrafted meals near you.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "FoodHub - Premium Food Delivery",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FoodHub | Premium Food Delivery Experience",
+    description:
+      "The better way to order food. Discover top kitchens and handcrafted meals near you.",
+    images: ["/og-image.png"],
+    creator: "@foodhub",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 };
 
 export default function RootLayout({
