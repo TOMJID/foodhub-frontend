@@ -419,7 +419,7 @@ export default function OrderDetailsPage() {
                 <Button
                   asChild
                   className='w-full h-16 bg-charcoal text-white rounded-none border-4 border-charcoal font-black uppercase tracking-widest text-sm hover:bg-brand transition-all shadow-[8px_8px_0px_0px_rgba(10,10,10,1)] active:shadow-none'>
-                  <Link href='/meals'>Reorder Again</Link>
+                  <Link href='/meals'>Order Again</Link>
                 </Button>
 
                 {/* Cancel Order Button - only shown when status is "placed" */}
