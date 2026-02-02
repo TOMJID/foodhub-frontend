@@ -13,7 +13,7 @@ interface Meal {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://foodhub-demo.vercel.app";
+  const baseUrl = "https://foodhub-by-tomjid.vercel.app";
 
   // Static routes
   const routes = [
