@@ -12,7 +12,6 @@ import {
   CreditCard,
   Truck,
   Loader2,
-  ShoppingCart,
   CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
@@ -258,24 +257,13 @@ export default function CheckoutPage() {
                       <Loader2 className='size-6 animate-spin' />
                     ) : (
                       <>
-                        <Truck className='size-6 mr-3 group-hover:translate-x-12 transition-transform duration-500' />
+                        <Truck className='size-6 mr-3 group-hover:translate-x-4 transition-transform duration-500' />
                         Confirm Order
                       </>
                     )}
                   </Button>
                 </CardContent>
               </Card>
-
-              <div className='bg-brand/10 border-4 border-brand border-dashed p-6 flex items-start gap-4'>
-                <ShoppingCart className='size-6 text-brand shrink-0' />
-                <p className='text-[10px] font-bold text-brand uppercase leading-relaxed tracking-widest'>
-                  Items belong to{" "}
-                  <span className='font-black underline'>
-                    {items[0]?.restaurantName}
-                  </span>
-                  . Your delivery will be prioritized by their kitchen.
-                </p>
-              </div>
             </div>
           </div>
         </div>
