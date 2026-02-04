@@ -42,6 +42,10 @@ export function AccountContent() {
     useState<ProviderProfile | null>(null);
   const [isProviderLoading, setIsProviderLoading] = useState(false);
 
+  // Auto-creation states
+  const [hasCheckedProfile, setHasCheckedProfile] = useState(false);
+  const [isAutoCreating, setIsAutoCreating] = useState(false);
+
   // Edit Profile States (Provider)
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
@@ -152,6 +156,7 @@ export function AccountContent() {
         console.error("Failed to fetch provider profile:", error);
       } finally {
         setIsProviderLoading(false);
+        setHasCheckedProfile(true);
       }
     };
 
@@ -165,6 +170,54 @@ export function AccountContent() {
       router.push("/login");
     }
   }, [session, isPending, router]);
+
+  // Auto-create profile for providers if missing
+  useEffect(() => {
+    if (
+      session &&
+      (session.user as UserWithExtras).role === "provider" &&
+      hasCheckedProfile &&
+      !providerProfile &&
+      !isAutoCreating
+    ) {
+      const autoCreate = async () => {
+        setIsAutoCreating(true);
+        const toastId = toast.loading("Initializing your kitchen...");
+
+        try {
+          const response = await fetch("/api/providers", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              restaurantName: session.user.name || "My Restaurant",
+              cuisineType: "General",
+              address: "Update Address",
+              coverImageUrl: "",
+            }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            toast.success("Kitchen Profile Ready!", { id: toastId });
+            setProviderProfile(data.data);
+            setActiveTab("provider");
+            // Refresh to ensure everything is synced
+            router.refresh();
+          } else {
+            toast.dismiss(toastId);
+          }
+        } catch (error) {
+          console.error("Auto-creation failed", error);
+          toast.dismiss(toastId);
+        } finally {
+          setIsAutoCreating(false);
+        }
+      };
+
+      autoCreate();
+    }
+  }, [session, hasCheckedProfile, providerProfile, isAutoCreating, router]);
 
   const user = session?.user as UserWithExtras;
 

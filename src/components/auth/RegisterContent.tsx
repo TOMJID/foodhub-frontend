@@ -32,6 +32,7 @@ const formSchema = z.object({
   password: z.string().min(8, {
     message: "Password must be at least 8 characters.",
   }),
+  role: z.enum(["user", "provider"]),
 });
 
 export function RegisterContent() {
@@ -44,6 +45,7 @@ export function RegisterContent() {
       name: "",
       email: "",
       password: "",
+      role: "user",
     },
   });
 
@@ -130,7 +132,9 @@ export function RegisterContent() {
                   render={({ field }) => (
                     <FormItem className='space-y-2'>
                       <FormLabel className='text-xs font-black uppercase tracking-widest text-charcoal'>
-                        Full Name
+                        {form.watch("role") === "provider"
+                          ? "Restaurant Name"
+                          : "Full Name"}
                       </FormLabel>
                       <FormControl>
                         <Input

@@ -14,6 +14,14 @@ import {
 } from "@/components/ui/card";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Category {
   id: string;
@@ -31,6 +39,9 @@ export function AdminCategoriesContent() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
+    null,
+  );
 
   // Form state
   const [newName, setNewName] = useState("");
@@ -86,8 +97,6 @@ export function AdminCategoriesContent() {
   };
 
   const handleDeleteCategory = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to void the "${name}" tier?`)) return;
-
     setIsDeleting(id);
     try {
       const response = await fetch(`/api/categories/${id}`, {
@@ -104,6 +113,7 @@ export function AdminCategoriesContent() {
       toast.error("Connection error. Try again.");
     } finally {
       setIsDeleting(null);
+      setCategoryToDelete(null);
     }
   };
 
@@ -129,7 +139,7 @@ export function AdminCategoriesContent() {
 
       <div className='grid grid-cols-1 lg:grid-cols-12 gap-12 items-start'>
         {/* --- Create Section --- */}
-        <div className='lg:col-span-5 space-y-8'>
+        <div className='lg:col-span-5 lg:sticky lg:top-8 self-start space-y-8'>
           <Card className='rounded-none border-4 border-charcoal bg-white shadow-[12px_12px_0px_0px_rgba(255,87,34,1)]'>
             <CardHeader className='bg-charcoal text-white'>
               <CardTitle className='font-serif font-black text-2xl uppercase tracking-tighter italic'>
@@ -216,7 +226,7 @@ export function AdminCategoriesContent() {
                 </div>
               </div>
             </div>
-            <div className='p-0 divide-y-4 divide-charcoal/5 max-h-[700px] overflow-y-auto px-1'>
+            <div className='p-0 divide-y-4 divide-charcoal/5 px-1'>
               {isLoading ? (
                 <div className='py-20'>
                   <LoadingSpinner text='Scanning Catalog...' size='md' />
@@ -257,7 +267,7 @@ export function AdminCategoriesContent() {
                       </div>
                       <Button
                         disabled={isDeleting === cat.id}
-                        onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                        onClick={() => setCategoryToDelete(cat)}
                         variant='ghost'
                         className='size-10 rounded-none border-2 border-charcoal hover:bg-red-500 hover:text-white transition-all opacity-80 hover:opacity-100'>
                         {isDeleting === cat.id ? (
@@ -283,6 +293,49 @@ export function AdminCategoriesContent() {
           </div>
         </div>
       </div>
+      {/* --- Delete Confirmation Dialog --- */}
+      <Dialog
+        open={!!categoryToDelete}
+        onOpenChange={(open) => !open && setCategoryToDelete(null)}>
+        <DialogContent className='rounded-none border-4 border-charcoal bg-white shadow-[12px_12px_0px_0px_rgba(239,68,68,1)] max-w-md'>
+          <DialogHeader className='space-y-4'>
+            <div className='size-16 bg-red-500 border-4 border-charcoal flex items-center justify-center rotate-3 mx-auto mb-4 shadow-[4px_4px_0px_0px_rgba(10,10,10,1)]'>
+              <AlertCircle className='size-10 text-white' />
+            </div>
+            <DialogTitle className='font-serif font-black text-3xl uppercase italic text-charcoal text-center leading-tight'>
+              Void This <span className='text-red-500'>Tier?</span>
+            </DialogTitle>
+            <DialogDescription className='text-center font-bold text-charcoal/60 uppercase text-[10px] tracking-widest'>
+              You are about to delete the{" "}
+              <span className='text-charcoal font-black underline'>
+                &quot;{categoryToDelete?.name}&quot;
+              </span>{" "}
+              category. This action is irreversible.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className='mt-8 gap-4 sm:flex-row flex-col'>
+            <Button
+              variant='outline'
+              onClick={() => setCategoryToDelete(null)}
+              className='flex-1 h-14 rounded-none border-4 border-charcoal font-black uppercase text-xs hover:bg-cream transition-all'>
+              Nevermind
+            </Button>
+            <Button
+              disabled={!!isDeleting}
+              onClick={() =>
+                categoryToDelete &&
+                handleDeleteCategory(categoryToDelete.id, categoryToDelete.name)
+              }
+              className='flex-1 h-14 bg-red-500 text-white rounded-none border-4 border-charcoal font-black uppercase text-xs hover:bg-red-600 transition-all shadow-[4px_4px_0px_0px_rgba(10,10,10,1)] active:translate-x-1 active:translate-y-1 active:shadow-none'>
+              {isDeleting ? (
+                <LoadingSpinner size='sm' text='' brutalist={false} />
+              ) : (
+                "Execute Void"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
